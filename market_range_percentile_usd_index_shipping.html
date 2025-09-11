@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор діапазону цін</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+        :root {
+            /* Темна тема (основні кольори) */
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #f5f5f5;
+            --input-bg: #2b2b2b;
+            --input-border: #424242;
+            --placeholder-color: #a0a0a0;
+            --accent-color: #bdbdbd;
+            --accent-hover: #9e9e9e;
+            --btn-text-color: #121212;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --shadow-sm-color: rgba(0, 0, 0, 0.3);
+            --shadow-inset-color: rgba(0, 0, 0, 0.4);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: background-color 0.5s ease-in-out;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px var(--shadow-color), 0 4px 6px -2px var(--shadow-sm-color);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 500px;
+            animation: fadeIn 0.8s ease-in-out;
+            transition: background-color 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--input-border);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+            .input-field:focus {
+                outline: none;
+                border-color: var(--accent-color);
+                box-shadow: 0 0 0 3px rgba(189, 189, 189, 0.5);
+            }
+
+            .input-field::placeholder {
+                color: var(--placeholder-color);
+            }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            background-color: var(--accent-color);
+            color: var(--btn-text-color);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+            .btn:hover {
+                background-color: var(--accent-hover);
+                transform: translateY(-2px);
+            }
+
+        .result-box {
+            margin-top: 2rem;
+            background-color: var(--input-bg);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: inset 0 2px 4px var(--shadow-inset-color);
+            transition: all 0.5s ease-in-out;
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+            .result-box.show {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+        .input-group {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+            .input-group:nth-child(1) {
+                animation-delay: 0.2s;
+            }
+
+            .input-group:nth-child(2) {
+                animation-delay: 0.4s;
+            }
+
+            .input-group:nth-child(3) {
+                animation-delay: 0.6s;
+            }
+
+            .input-group:nth-child(4) {
+                animation-delay: 0.8s;
+            }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+        }
+
+            .result-table th,
+            .result-table td {
+                padding: 0.75rem;
+                text-align: left;
+                border-bottom: 1px solid var(--input-border);
+            }
+
+            .result-table th {
+                font-weight: 500;
+                color: var(--placeholder-color);
+            }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2 class="text-3xl font-bold text-center mb-6">Калькулятор діапазону цін</h2>
+
+        <div class="space-y-6">
+            <div class="input-group">
+                <label for="minPrice">Мінімальна ціна (нижня межа):</label>
+                <input type="number" id="minPrice" placeholder="наприклад, 150" class="input-field">
+            </div>
+            <div class="input-group">
+                <label for="maxPrice">Максимальна ціна (верхня межа):</label>
+                <input type="number" id="maxPrice" placeholder="наприклад, 300" class="input-field">
+            </div>
+            <div class="input-group">
+                <label for="centsIndex">Індекс центів (0–99):</label>
+                <input type="number" id="centsIndex" placeholder="наприклад, 72" min="0" max="99" class="input-field">
+            </div>
+            <div class="input-group">
+                <label for="shippingCost">Вартість доставки ($):</label>
+                <input type="number" id="shippingCost" placeholder="наприклад, 300" step="0.01" class="input-field">
+            </div>
+        </div>
+
+        <button onclick="calculate()" class="btn mt-8">Розрахувати</button>
+        <div id="result" class="result-box"></div>
+    </div>
+
+    <script>
+        function calculate() {
+            const min = parseFloat(document.getElementById("minPrice").value);
+            const max = parseFloat(document.getElementById("maxPrice").value);
+            const centsIndex = parseInt(document.getElementById("centsIndex").value);
+            const shipping = parseFloat(document.getElementById("shippingCost").value);
+            const resultBox = document.getElementById("result");
+
+            if (isNaN(min) || isNaN(max) || min >= max) {
+                resultBox.innerHTML = "<p>Будь ласка, введіть коректні межі (min < max).</p>";
+                resultBox.classList.add('show');
+                return;
+            }
+            if (isNaN(centsIndex) || centsIndex < 0 || centsIndex > 99) {
+                resultBox.innerHTML = "<p>Будь ласка, введіть коректний індекс центів (0–99).</p>";
+                resultBox.classList.add('show');
+                return;
+            }
+            if (isNaN(shipping) || shipping < 0) {
+                resultBox.innerHTML = "<p>Будь ласка, введіть коректну вартість доставки.</p>";
+                resultBox.classList.add('show');
+                return;
+            }
+
+            let tableHTML = `
+                    <h3 class="font-bold text-lg mb-4">Результат</h3>
+                    <table class="result-table">
+                        <thead>
+                            <tr>
+                                <th>Відсоток</th>
+                                <th>Базова ціна</th>
+                                <th>Всього</th>
+                                <th>Зі знижкою (20-25%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+            for (let p = 50; p <= 80; p += 10) {
+                const baseValue = min + (max - min) * (p / 100);
+                const valueWithCents = parseFloat((Math.floor(baseValue) + centsIndex / 100).toFixed(2));
+
+                const finalValue = (valueWithCents - shipping).toFixed(2);
+                const discounted20 = ((valueWithCents - shipping) * 0.80 + shipping).toFixed(2);
+                const discounted25 = ((valueWithCents - shipping) * 0.75 + shipping).toFixed(2);
+
+
+                tableHTML += `
+                        <tr>
+                            <td>${p}%</td>
+                            <td>$${valueWithCents.toFixed(2)}</td>
+                            <td>$${finalValue}</td>
+                            <td>$${discounted25} - $${discounted20}</td>
+                        </tr>
+                    `;
+            }
+
+            tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+
+            resultBox.innerHTML = tableHTML;
+            resultBox.classList.add('show');
+        }
+    </script>
+</body>
+</html>
