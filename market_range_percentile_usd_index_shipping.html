@@ -110,24 +110,59 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .result-table {
+        /* Адаптивна таблиця */
+        .result-table-container {
+            display: block;
             width: 100%;
-            border-collapse: collapse;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
         }
-
-        .result-table th,
-        .result-table td {
-            padding: 0.75rem;
-            text-align: left;
+        .result-table-header {
+            display: none; /* Сховати заголовок таблиці на мобільних пристроях */
+        }
+        .result-table-row {
+            display: flex;
+            flex-direction: column;
             border-bottom: 1px solid var(--input-border);
+            padding: 1rem 0;
         }
-
-        .result-table th {
+        .table-cell {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+        }
+        .cell-label {
             font-weight: 500;
             color: var(--placeholder-color);
         }
+
+        /* Стилі для десктопу (md: і вище) */
+        @media (min-width: 768px) {
+            .result-table-header {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                font-weight: 500;
+                color: var(--placeholder-color);
+                border-bottom: 1px solid var(--input-border);
+                padding-bottom: 0.5rem;
+            }
+            .header-cell, .table-cell {
+                flex: 1;
+                text-align: left;
+            }
+            .table-cell {
+                flex-direction: column; /* Повернути до вертикального відображення */
+            }
+            .result-table-row {
+                flex-direction: row;
+                align-items: center;
+                border-bottom: 1px solid var(--input-border);
+                padding: 0.75rem 0;
+            }
+            .cell-label {
+                display: none;
+            }
+        }
+
         .select-field {
             width: 100%;
             padding: 0.75rem;
@@ -227,40 +262,46 @@
 
             let tableHTML = `
                 <h3 class="font-bold text-lg mb-4">Результат</h3>
-                <table class="result-table">
-                    <thead>
-                        <tr>
-                            <th>Відсоток</th>
-                            <th>Базова ціна</th>
-                            <th>Всього</th>
-                            <th>Зі знижкою (20-25%)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <div class="result-table-container">
+                    <div class="result-table-header md:flex">
+                        <div class="flex-1">Відсоток</div>
+                        <div class="flex-1">Базова ціна</div>
+                        <div class="flex-1">Всього</div>
+                        <div class="flex-1">Зі знижкою (20-25%)</div>
+                    </div>
             `;
 
             for (let p = 50; p <= 80; p += 10) {
                 const baseValue = min + (max - min) * (p / 100);
                 const valueWithCents = parseFloat((Math.floor(baseValue) + centsIndex / 100).toFixed(2));
-                
                 const finalValue = (valueWithCents - shipping).toFixed(2);
                 const discounted20 = ((valueWithCents - shipping) * 0.80 + shipping).toFixed(2);
                 const discounted25 = ((valueWithCents - shipping) * 0.75 + shipping).toFixed(2);
-                
 
                 tableHTML += `
-                    <tr>
-                        <td>${p}%</td>
-                        <td>$${valueWithCents.toFixed(2)}</td>
-                        <td>$${finalValue}</td>
-                        <td>$${discounted25} - $${discounted20}</td>
-                    </tr>
+                    <div class="result-table-row">
+                        <div class="table-cell">
+                            <span class="cell-label md:hidden">Відсоток:</span>
+                            <span>${p}%</span>
+                        </div>
+                        <div class="table-cell">
+                            <span class="cell-label md:hidden">Базова ціна:</span>
+                            <span>$${valueWithCents.toFixed(2)}</span>
+                        </div>
+                        <div class="table-cell">
+                            <span class="cell-label md:hidden">Всього:</span>
+                            <span>$${finalValue}</span>
+                        </div>
+                        <div class="table-cell">
+                            <span class="cell-label md:hidden">Зі знижкою (20-25%):</span>
+                            <span>$${discounted25} - $${discounted20}</span>
+                        </div>
+                    </div>
                 `;
             }
 
             tableHTML += `
-                    </tbody>
-                </table>
+                </div>
             `;
 
             resultBox.innerHTML = tableHTML;
