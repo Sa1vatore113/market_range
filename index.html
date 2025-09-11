@@ -33,6 +33,7 @@
             align-items: center;
             min-height: 100vh;
             padding: 20px;
+            flex-direction: column;
             transition: background-color 0.5s ease-in-out;
         }
         .card {
@@ -127,10 +128,24 @@
             font-weight: 500;
             color: var(--placeholder-color);
         }
+        .select-field {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--input-border);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+        .select-field:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(189, 189, 189, 0.5);
+        }
     </style>
 </head>
 <body>
-    <div class="card">
+    <div class="card mb-6">
         <h2 class="text-3xl font-bold text-center mb-6">Калькулятор діапазону цін</h2>
         
         <div class="space-y-6">
@@ -154,6 +169,36 @@
         
         <button onclick="calculate()" class="btn mt-8">Розрахувати</button>
         <div id="result" class="result-box"></div>
+    </div>
+
+    <div class="card mt-6">
+        <h2 class="text-3xl font-bold text-center mb-6">Ділення номерів деталей</h2>
+        <div class="space-y-6">
+            <select id="brand" class="select-field">
+                <option value="">Виберіть марку</option>
+                <option>Alfa Romeo</option>
+                <option>BMW/Mini</option>
+                <option>Chevrolet/GMC</option>
+                <option>Ford/Lincoln</option>
+                <option>Honda/Acura</option>
+                <option>Hyundai/KIA</option>
+                <option>Jaguar/Land Rover</option>
+                <option>Jeep/Dodge/RAM</option>
+                <option>Maserati</option>
+                <option>Mazda</option>
+                <option>Mercedes-Benz</option>
+                <option>Mitsubishi</option>
+                <option>Nissan/Infiniti</option>
+                <option>Subaru</option>
+                <option>Tesla</option>
+                <option>Toyota/Lexus/Scion</option>
+                <option>Volkswagen/Audi/Porsche</option>
+                <option>Volvo</option>
+            </select>
+            <input type="text" id="code" placeholder="Введіть код деталі" class="input-field">
+            <button onclick="processCode()" class="btn">Розбити код</button>
+        </div>
+        <div id="splitter-results" class="result-box"></div>
     </div>
 
     <script>
@@ -220,6 +265,109 @@
 
             resultBox.innerHTML = tableHTML;
             resultBox.classList.add('show');
+        }
+
+        const rules = {
+            "Alfa Romeo": [
+                c => c.replace(/(\d{2})(\d{9})(\d)/, "$1 $2 $3"),
+                c => c.replace(/(\d{8})([A-Z]{2})/, "$1 $2")
+            ],
+            "BMW/Mini": [
+                c => c.replace(/(\d)(\d{3})(\d{3})/, "$1 $2 $3"),
+                c => c.replace(/(\d{2})(\d{2})(\d)(\d{3})(\d{3})/, "$1 $2 $3 $4 $5")
+            ],
+            "Chevrolet/GMC": [c => c],
+            "Ford/Lincoln": [
+                c => c.replace(/(.{4})(.{4})(.{2})/, "$1 $2 $3"),
+                c => c.replace(/(.{4})(.{4})(.{2})/, "$1$2 $3")
+            ],
+            "Honda/Acura": [
+                c => c.replace(/(\d{5})([A-Z]{3})(\d{3})/, "$1 $2 $3"),
+                c => c.replace(/(\d{5})([A-Z]{3}\d{2})([A-Z]\d)/, "$1$2 $3"),
+                c => c.replace(/(\d{5})([A-Z]{3})(\d{3})([A-Z]\d)/, "$1 $2 $3 $4")
+            ],
+            "Hyundai/KIA": [
+                c => c.replace(/(\d{5})([A-Z]\d{4})/, "$1 $2"),
+                c => c.replace(/(\d{5})([A-Z]\d{3})([A-Z]{3})/, "$1 $2 $3")
+            ],
+            "Jaguar/Land Rover": [
+                c => c.replace(/(.{4})(.{5})(.{2})/, "$1 $2 $3"),
+                c => c.replace(/LR(\d+)/, "LR $1"),
+                c => c.replace(/T4A(\d+)/, "T4A $1")
+            ],
+            "Jeep/Dodge/RAM": [
+                c => c.replace(/(\d{8})([A-Z]{2})/, "$1 $2"),
+                c => c.replace(/(\d{2})(\d{9})(\d)/, "$1 $2 $3")
+            ],
+            "Maserati": [
+                c => c.replace(/(\d)(\d{8})(\d)/, "$1 $2 $3"),
+                c => c
+            ],
+            "Mazda": [
+                c => c.replace(/(.{4})(.{2})(.{3})(.{2})/, "$1 $2 $3 $4"),
+                c => c.replace(/(.{4})(.{5})(.{2})(.{2})/, "$1 $2 $3 $4")
+            ],
+            "Mercedes-Benz": [
+                c => "A" + c,
+                c => c.replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, "$1 $2 $3 $4"),
+                c => c.replace(/(\d{3})(\d{3})(\d{2})(\d{2})(.{4})/, "$1 $2 $3 $4 $5")
+            ],
+            "Mitsubishi": [
+                c => c.replace(/(\d{4}[A-Z])(\d{3})/, "$1 $2"),
+                c => c.replace(/(.{5})(.{3})(.{2})/, "$1 $2 $3")
+            ],
+            "Nissan/Infiniti": [
+                c => c.replace(/(\d{4})([A-Z]\d{4})/, "$1 $2")
+            ],
+            "Subaru": [
+                c => c.replace(/(\d{5})([A-Z]\d{3})/, "$1 $2"),
+                c => c.replace(/(\d{5})([A-Z]{2}\d{2})([A-Z]{2})/, "$1 $2 $3")
+            ],
+            "Tesla": [
+                c => c.replace(/(\d{7})(\d{2})([A-Z])/, "$1 $2 $3"),
+                c => c.replace(/(\d{7})([A-Z0-9]{2})([A-Z])/, "$1 $2 $3")
+            ],
+            "Toyota/Lexus/Scion": [
+                c => c.replace(/(\d{5})(\d{5})/, "$1 $2"),
+                c => c.replace(/(\d{5})(\d{5})([A-Z0-9]{2})/, "$1 $2 $3"),
+                c => c.replace(/(\d{5})(\d{5})([A-Z0-9]{2})/, "$1 $2 $3")
+            ],
+            "Volkswagen/Audi/Porsche": [
+                c => c.replace(/(\d{2}[A-Z]?)(\d{3})(\d{3})/, "$1 $2 $3"),
+                c => c.replace(/(.{9})([A-Z0-9]{3})/, "$1 $2"),
+                c => c.replace(/(.{3})(.{3})(.{3})(.{1,3})(.{2,3})/, "$1 $2 $3 $4 $5")
+            ],
+            "Volvo": [c => c]
+        };
+
+        function processCode() {
+            const brand = document.getElementById("brand").value;
+            const code = document.getElementById("code").value.trim();
+            const resultsBox = document.getElementById("splitter-results");
+
+            if (!brand || !code) {
+                resultsBox.innerHTML = "<p>Будь ласка, виберіть марку та введіть код.</p>";
+                resultsBox.classList.add('show');
+                return;
+            }
+
+            const brandRules = rules[brand];
+            if (!brandRules) {
+                resultsBox.innerHTML = `<p>${code}</p>`;
+                resultsBox.classList.add('show');
+                return;
+            }
+
+            let results = [code];
+            for (let fn of brandRules) {
+                try {
+                    const formatted = fn(code);
+                    if (formatted && !results.includes(formatted)) results.push(formatted);
+                } catch {}
+            }
+
+            resultsBox.innerHTML = results.map(r => `<p>${r}</p>`).join('');
+            resultsBox.classList.add('show');
         }
     </script>
 </body>
