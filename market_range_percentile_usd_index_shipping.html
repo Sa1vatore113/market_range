@@ -81,9 +81,30 @@
             background-color: var(--card-bg);
             border-radius: 1.5rem;
             box-shadow: 0 10px 15px -3px var(--shadow-color), 0 4px 6px -2px var(--shadow-sm-color);
-            padding: 2.5rem;
+            padding: 1.5rem;
             width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
             transition: background-color 0.5s ease-in-out;
+            overflow: hidden;
+        }
+
+        /* Для мобильных устройств */
+        @media (max-width: 640px) {
+            .card {
+                padding: 1rem;
+                border-radius: 1rem;
+            }
+
+            .main-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .left-panel, .right-panel {
+                flex: none;
+                width: 100%;
+            }
         }
 
         .input-field, .select-field {
@@ -190,37 +211,166 @@
                 font-weight: 500;
                 color: var(--placeholder-color);
             }
+        /* Стили для анимации переворота */
+        .calc-container {
+            perspective: 1000px;
+            width: 100%;
+            height: auto;
+        }
+
+        .calc-card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+            .calc-card.flipped {
+                transform: rotateY(180deg);
+            }
+
+        .calc-front,
+        .calc-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 1.5rem;
+        }
+
+        .calc-back {
+            transform: rotateY(180deg);
+        }
+
+            /* Анимация для контента на обратной стороне */
+            .calc-back .card {
+                animation: fadeInBack 0.6s ease-in-out forwards;
+                animation-delay: 0.4s;
+                opacity: 0;
+            }
+
+        @keyframes fadeInBack {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* Обновленные стили для кнопок переключения */
+        #toggleMileageCalc, #backToMainCalc {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+            #toggleMileageCalc:hover, #backToMainCalc:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+                background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            }
+        .left-panel {
+            flex: 1.5; /* Увеличиваем ширину левой панели */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+            .left-panel .card {
+                max-width: 550px; /* Увеличиваем максимальную ширину карточки */
+                width: 100%;
+            }
+
+        .right-panel {
+            flex: 1; /* Правая панель остается прежней */
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="main-container">
         <!-- Лева панель: Калькулятор -->
         <div class="left-panel">
-            <div class="card">
-                <h2 class="text-3xl font-bold text-center mb-6">Калькулятор діапазону цін</h2>
-                <div class="space-y-6">
-                    <div class="input-group">
-                        <label for="minPrice" class="block mb-2">Мінімальна ціна (нижня межа):</label>
-                        <input type="number" id="minPrice" placeholder="наприклад, 150" class="input-field">
+            <div class="calc-container">
+                <div class="calc-card">
+                    <!-- Лицевая сторона - основной калькулятор -->
+                    <div class="calc-front">
+                        <div class="card">
+                            <h2 class="text-3xl font-bold text-center mb-6">Калькулятор діапазону цін</h2>
+                            <div class="space-y-6">
+                                <div class="input-group">
+                                    <label for="minPrice" class="block mb-2">Мінімальна ціна (нижня межа):</label>
+                                    <input type="number" id="minPrice" class="input-field">
+                                </div>
+                                <div class="input-group">
+                                    <label for="maxPrice" class="block mb-2">Максимальна ціна (верхня межа):</label>
+                                    <input type="number" id="maxPrice" class="input-field">
+                                </div>
+                                <div class="input-group">
+                                    <label for="centsIndex" class="block mb-2">Індекс центів (0–99):</label>
+                                    <input type="number" id="centsIndex" min="0" max="99" class="input-field">
+                                </div>
+                                <div class="input-group">
+                                    <label for="shippingCost" class="block mb-2">Вартість доставки ($):</label>
+                                    <input type="number" id="shippingCost" step="0.01" class="input-field">
+                                </div>
+                            </div>
+                            <button onclick="calculate()" class="btn mt-8">Розрахувати</button>
+                            <div id="result" class="result-box"></div>
+
+                            <button id="toggleMileageCalc" class="btn mt-6 w-full bg-indigo-600 hover:bg-indigo-700">
+                                Перейти до калькулятора з пробігом
+                            </button>
+                        </div>
                     </div>
-                    <div class="input-group">
-                        <label for="maxPrice" class="block mb-2">Максимальна ціна (верхня межа):</label>
-                        <input type="number" id="maxPrice" placeholder="наприклад, 300" class="input-field">
-                    </div>
-                    <div class="input-group">
-                        <label for="centsIndex" class="block mb-2">Індекс центів (0–99):</label>
-                        <input type="number" id="centsIndex" placeholder="наприклад, 72" min="0" max="99" class="input-field">
-                    </div>
-                    <div class="input-group">
-                        <label for="shippingCost" class="block mb-2">Вартість доставки ($):</label>
-                        <input type="number" id="shippingCost" placeholder="наприклад, 300" step="0.01" class="input-field">
+
+                    <!-- Обратная сторона - калькулятор с пробегом -->
+                    <div class="calc-back">
+                        <div class="card">
+                            <h2 class="text-2xl font-bold text-center mb-4">Калькулятор дорогих деталей</h2>
+
+                            <h3 class="font-semibold mb-2">Ринкові межі</h3>
+                            <div class="space-y-2">
+                                <label class="block">
+                                    Мінімальна ціна ($, дешева деталь):
+                                    <input type="number" id="minPriceMileage" class="input-field">
+                                </label>
+                                <label class="block">
+                                    Максимальний пробіг (миль, дешева деталь):
+                                    <input type="number" id="maxMileage" class="input-field">
+                                </label>
+                                <label class="block">
+                                    Максимальна ціна ($, дорога деталь):
+                                    <input type="number" id="maxPriceMileage" class="input-field">
+                                </label>
+                                <label class="block">
+                                    Мінімальний пробіг (миль, дорога деталь):
+                                    <input type="number" id="minMileage" class="input-field">
+                                </label>
+                            </div>
+                            <h3 class="font-semibold mt-4 mb-2">Мої деталі</h3>
+                            <div id="partsList" class="space-y-2"></div>
+                            <button class="btn mt-2" onclick="addPart()">+ Додати деталь</button>
+
+                            <button class="btn mt-6 w-full bg-green-600 hover:bg-green-700" onclick="calculateWithMileage()">Розрахувати</button>
+                            <div id="resultsMileage" class="result-box mt-4"></div>
+
+                            <button id="backToMainCalc" class="btn mt-6 w-full bg-gray-600 hover:bg-gray-700">
+                                ← Повернутись назад
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <button onclick="calculate()" class="btn mt-8">Розрахувати</button>
-                <div id="result" class="result-box"></div>
             </div>
         </div>
-
         <!-- Права панель: Два менші блоки -->
         <div class="right-panel">
             <!-- Верхній блок: Ділення коду -->
@@ -272,6 +422,130 @@
     </div>
 
     <script>
+        let partCounter = 0;
+
+        // Анимация открытия
+        document.getElementById('toggleMileageCalc').addEventListener('click', () => {
+            const calcCard = document.querySelector('.calc-card');
+            calcCard.classList.add('flipped');
+        });
+
+        // Возврат к основному калькулятору
+        document.getElementById('backToMainCalc').addEventListener('click', () => {
+            const calcCard = document.querySelector('.calc-card');
+            calcCard.classList.remove('flipped');
+        });
+
+
+        // Добавить деталь
+        function addPart() {
+            partCounter++;
+            const partsList = document.getElementById('partsList');
+            const div = document.createElement('div');
+            div.classList.add('part-item');
+            div.innerHTML = `
+     <div class="flex items-center justify-between mb-2">
+            <label class="block mb-0">Деталь ${partCounter}: Пробіг (миль)</label>
+            <button onclick="removePart(this)" class="text-red-400 hover:text-red-300 text-lg font-bold ml-2">×</button>
+        </div>
+        <input type="number" class="partMileage input-field">
+  `;
+            partsList.appendChild(div);
+        }
+        function removePart(button) {
+            const partItem = button.closest('.part-item');
+            partItem.remove();
+
+            // Пересчитываем номера деталей
+            const partItems = document.querySelectorAll('.part-item');
+            partItems.forEach((item, index) => {
+                const label = item.querySelector('label');
+                label.textContent = `Деталь ${index + 1}: Пробіг (миль)`;
+            });
+
+            partCounter = partItems.length;
+        }
+
+        // Рассчёт с пробегом
+        function calculateWithMileage() {
+            const minPrice = parseFloat(document.getElementById('minPriceMileage').value); // дешева
+            const maxMileage = parseFloat(document.getElementById('maxMileage').value);   // дешева (максимальный пробег)
+            const maxPrice = parseFloat(document.getElementById('maxPriceMileage').value); // дорога
+            const minMileage = parseFloat(document.getElementById('minMileage').value);   // дорога (минимальный пробег)
+
+            const resultsDiv = document.getElementById('resultsMileage');
+            resultsDiv.innerHTML = "";
+
+            if (isNaN(minPrice) || isNaN(maxMileage) || isNaN(maxPrice) || isNaN(minMileage)) {
+                resultsDiv.innerHTML = "<p class='text-red-400'>Заповніть усі ринкові межі</p>";
+                return;
+            }
+
+            if (minPrice >= maxPrice) {
+                resultsDiv.innerHTML = "<p class='text-red-400'>Помилка: мінімальна ціна повинна бути меншою за максимальну</p>";
+                return;
+            }
+            if (minMileage >= maxMileage) {
+                resultsDiv.innerHTML = "<p class='text-red-400'>Помилка: мінімальний пробіг повинен бути меншим за максимальний</p>";
+                return;
+            }
+
+            // Строим формулу через 2 точки: (minMileage, maxPrice) и (maxMileage, minPrice)
+            // y = a + b*x
+            const b = (maxPrice - minPrice) / (minMileage - maxMileage);
+            const a = maxPrice - b * minMileage;
+
+            const mileages = [...document.querySelectorAll('.partMileage')]
+                .map(inp => parseFloat(inp.value))
+                .filter(m => !isNaN(m));
+
+            if (mileages.length === 0) {
+                resultsDiv.innerHTML = "<p class='text-red-400'>Додайте хоча б одну деталь</p>";
+                return;
+            }
+
+            // 50% рынка = (Максимальная цена - минимальная) * 0.5 + минимальная цена
+            const market50Percent = (maxPrice - minPrice) * 0.5 + minPrice;
+
+            const tableContainer = document.createElement('div');
+            tableContainer.classList.add('result-table-container');
+
+            const tableHeader = document.createElement('div');
+            tableHeader.classList.add('table-header');
+            tableHeader.textContent = 'Ринкові ціни за пробігом';
+
+            const table = document.createElement('table');
+            table.classList.add('result-table');
+            table.innerHTML = `
+        <thead>
+            <tr>
+                <th>Деталь</th>
+                <th>Пробіг</th>
+                <th class="number-cell">Ціна</th>
+                <th class="number-cell">50% ринку</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>`;
+
+            mileages.forEach((m, idx) => {
+                const fairPrice = a + b * m;
+
+                const tbody = table.querySelector('tbody');
+                tbody.innerHTML += `
+            <tr>
+                <td><strong>Деталь ${idx + 1}</strong></td>
+                <td>${m.toLocaleString()} миль</td>
+                <td class="number-cell"><strong>$${fairPrice.toFixed(2)}</strong></td>
+                <td class="number-cell">$${market50Percent.toFixed(2)}</td>
+            </tr>`;
+            });
+
+            tableContainer.appendChild(tableHeader);
+            tableContainer.appendChild(table);
+            resultsDiv.appendChild(tableContainer);
+            resultsDiv.classList.add('show');
+        }
         // Data for the new car info feature
         const carData = {
             "Acura": {
@@ -622,200 +896,566 @@
                 return;
             }
 
+            const tableContainer = document.createElement('div');
+            tableContainer.classList.add('result-table-container');
+
+            const tableHeader = document.createElement('div');
+            tableHeader.classList.add('table-header');
+            tableHeader.textContent = 'Результати розрахунків';
+
             let tableHTML = `
-                            <h3 class="font-bold text-lg mb-4">Результат</h3>
-                            <table class="result-table">
-                                <thead>
-                                    <tr>
-                                        <th>Відсоток</th>
-                                        <th>Базова ціна</th>
-                                        <th>Всього</th>
-                                        <th>Зі знижкою (20-25%)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                        `;
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>%</th>
+                    <th class="number-cell">Базова</th>
+                    <th class="number-cell">Разом</th>
+                    <th>Знижка 20-25%</th>
+                </tr>
+            </thead>
+            <tbody>`;
 
             for (let p = 50; p <= 80; p += 10) {
                 const baseValue = min + (max - min) * (p / 100);
                 const valueWithCents = parseFloat((Math.floor(baseValue) + centsIndex / 100).toFixed(2));
-
                 const finalValue = (valueWithCents - shipping).toFixed(2);
                 const discounted20 = ((valueWithCents - shipping) * 0.80 + shipping).toFixed(2);
                 const discounted25 = ((valueWithCents - shipping) * 0.75 + shipping).toFixed(2);
 
-
                 tableHTML += `
-                                <tr>
-                                    <td>${p}%</td>
-                                    <td>$${valueWithCents.toFixed(2)}</td>
-                                    <td>$${finalValue}</td>
-                                    <td>$${discounted25} - $${discounted20}</td>
-                                </tr>
-                            `;
+            <tr>
+                <td class="compact-cell"><strong>${p}%</strong></td>
+                <td class="number-cell">$${valueWithCents.toFixed(2)}</td>
+                <td class="number-cell"><strong>$${finalValue}</strong></td>
+                <td class="compact-cell">$${discounted25} – $${discounted20}</td>
+            </tr>`;
             }
 
-            tableHTML += `
-                                </tbody>
-                            </table>
-                        `;
+            tableHTML += `</tbody></table>`;
 
-            resultBox.innerHTML = tableHTML;
+            tableContainer.appendChild(tableHeader);
+            tableContainer.innerHTML += tableHTML;
+            resultBox.appendChild(tableContainer);
             resultBox.classList.add('show');
         }
 
-        const rules = {
-            "Alfa Romeo": [
-                c => c.replace(/(\d{2})(\d{9})(\d)/, "$1 $2 $3"),
-                c => c.replace(/(\d{8})([A-Z]{2})/, "$1 $2")
-            ],
-            "BMW/Mini": [
-                c => c.replace(/(\d)(\d{3})(\d{3})/, "$1 $2 $3"),
-                c => c.replace(/(\d{2})(\d{2})(\d)(\d{3})(\d{3})/, "$1 $2 $3 $4 $5")
-            ],
-            "Chevrolet/GMC": [c => c],
-
-            // ✅ Ford/Lincoln
-            "Ford/Lincoln": [
-                // стандартный формат: 4 символа + 7 цифр + 1 буква → CJ5Z 7855115 A
-                c => c.replace(/^(\w{4})(\d{7})(\w{1})$/, "$1 $2 $3"),
-                // вариант без пробела после первых 4 → CJ5Z7855115 A
-                c => c.replace(/^(\w{4})(\d{7})(\w{1})$/, "$1$2 $3"),
-                // альтернативный формат: 4 символа + 6 символов + 2 буквы → CJ54 S55062 CJ
-                c => c.replace(/^(\w{4})(\w{6})(\w{2})$/, "$1 $2 $3")
-            ],
-
-            "Honda/Acura": [
-                c => c.replace(/(\d{5})([A-Z]{3})(\d{3})/, "$1 $2 $3"),
-                c => c.replace(/(\d{5})([A-Z]{3}\d{2})([A-Z]\d)/, "$1$2 $3"),
-                c => c.replace(/(\d{5})([A-Z]{3})(\d{3})([A-Z]\d)/, "$1 $2 $3 $4")
-            ],
-            "Hyundai/KIA": [
-                c => c.replace(/(\d{5})([A-Z]\d{4})/, "$1 $2"),
-                c => c.replace(/(\d{5})([A-Z]\d{3})([A-Z]{3})/, "$1 $2 $3")
-            ],
-            "Jaguar/Land Rover": [
-                c => c.replace(/(.{4})(.{5})(.{2})/, "$1 $2 $3"),
-                c => c.replace(/LR(\d+)/, "LR $1"),
-                c => c.replace(/T4A(\d+)/, "T4A $1")
-            ],
-            "Jeep/Dodge/RAM": [
-                c => c.replace(/(\d{8})([A-Z]{2})/, "$1 $2"),
-                c => c.replace(/(\d{2})(\d{9})(\d)/, "$1 $2 $3")
-            ],
-            "Maserati": [
-                c => c.replace(/(\d)(\d{8})(\d)/, "$1 $2 $3"),
-                c => c
-            ],
-            "Mazda": [
-                c => c.replace(/(.{4})(.{2})(.{3})(.{2})/, "$1 $2 $3 $4"),
-                c => c.replace(/(.{4})(.{5})(.{2})(.{2})/, "$1 $2 $3 $4")
-            ],
-
-            // ✅ Mercedes-Benz
-            "Mercedes-Benz": [
-                // исходный как есть
-                c => c,
-                // всегда вариант с A
-                c => (c.startsWith("A") ? c : "A" + c),
-                // вариант без A
-                c => (c.startsWith("A") ? c.slice(1) : c),
-                // классический 10-значный код: A2058300200 → A205 830 02 00
-                c => (c.startsWith("A") ? c : "A" + c)
-                    .replace(/(\d{3})(\d{3})(\d{2})(\d{2})$/, "$1 $2 $3 $4"),
-
-                // длинные цифровые 15-значные: A24781034009051 → 2478103400 / 24781034009051
-                c => {
-                    let clean = c.startsWith("A") ? c.slice(1) : c;
-                    if (/^\d{15}$/.test(clean)) {
-                        return clean.slice(0, 10) + " / " + clean;
-                    }
-                    return c;
-                },
-                // длинные цифровые красиво: 247 810 34 00 9051
-                c => {
-                    let clean = c.startsWith("A") ? c.slice(1) : c;
-                    if (/^\d{15}$/.test(clean)) {
-                        return clean.replace(/(\d{3})(\d{3})(\d{2})(\d{2})(\d{4})/, "$1 $2 $3 $4 $5");
-                    }
-                    return c;
-                },
-
-                // длинные с буквами: A20590500047N49 → 2059050004 / 20590500047N49
-                c => {
-                    let clean = c.startsWith("A") ? c.slice(1) : c;
-                    if (/^\d{10}\w{4}$/.test(clean)) {
-                        return clean.slice(0, 10) + " / " + clean;
-                    }
-                    return c;
-                },
-                // длинные с буквами красиво: 205 905 00 04 7N49
-                c => {
-                    let clean = c.startsWith("A") ? c.slice(1) : c;
-                    if (/^\d{10}\w{4}$/.test(clean)) {
-                        return clean.replace(/(\d{3})(\d{3})(\d{2})(\d{2})(\w{4})/, "$1 $2 $3 $4 $5");
-                    }
-                    return c;
-                }
-            ],
-
-            "Mitsubishi": [
-                c => c.replace(/(\d{4}[A-Z])(\d{3})/, "$1 $2"),
-                c => c.replace(/(.{5})(.{3})(.{2})/, "$1 $2 $3")
-            ],
-            "Nissan/Infiniti": [
-                c => c.replace(/(\d{4})([A-Z]\d{4})/, "$1 $2")
-            ],
-            "Subaru": [
-                c => c.replace(/(\d{5})([A-Z]\d{3})/, "$1 $2"),
-                c => c.replace(/(\d{5})([A-Z]{2}\d{2})([A-Z]{2})/, "$1 $2 $3")
-            ],
-            "Tesla": [
-                c => c.replace(/(\d{7})(\d{2})([A-Z])/, "$1 $2 $3"),
-                c => c.replace(/(\d{7})([A-Z0-9]{2})([A-Z])/, "$1 $2 $3")
-            ],
-            "Toyota/Lexus/Scion": [
-                c => c.replace(/(\d{5})(\d{5})/, "$1 $2"),
-                c => c.replace(/(\d{5})(\d{5})([A-Z0-9]{2})/, "$1 $2 $3"),
-                c => c.replace(/(\d{5})(\d{5})([A-Z0-9]{2})/, "$1 $2 $3")
-            ],
-            "Volkswagen/Audi/Porsche": [
-                c => c.replace(/(\d{2}[A-Z]?)(\d{3})(\d{3})/, "$1 $2 $3"),
-                c => c.replace(/(.{9})([A-Z0-9]{3})/, "$1 $2"),
-                c => c.replace(/(.{3})(.{3})(.{3})(.{1,3})(.{2,3})/, "$1 $2 $3 $4 $5")
-            ],
-            "Volvo": [c => c]
-
-        };
-
         function processCode() {
-            const brand = document.getElementById("brand").value;
-            const code = document.getElementById("code").value.trim();
-            const resultsBox = document.getElementById("splitter-results");
+            const input = document.getElementById('code').value.trim().toUpperCase();
+            const selectedBrand = document.getElementById('brand').value.toLowerCase();
+            const resultsDiv = document.getElementById('splitter-results');
+            resultsDiv.innerHTML = '';
 
-            if (!brand || !code) {
-                resultsBox.innerHTML = "<p>Будь ласка, виберіть марку та введіть код.</p>";
-                resultsBox.classList.add('show');
+            // Валидация ввода
+            if (input === '') {
+                resultsDiv.innerHTML = '<p class="text-red-400">Введіть код деталі</p>';
                 return;
             }
 
-            const brandRules = rules[brand];
-            if (!brandRules) {
-                resultsBox.innerHTML = `<p>${code}</p>`;
-                resultsBox.classList.add('show');
+            if (!/^[A-Z0-9-\s]+$/i.test(input)) {
+                resultsDiv.innerHTML = '<p class="text-red-400">Невірний формат. Дозволені лише літери, цифри та дефіси</p>';
                 return;
             }
 
-            let results = [code];
-            for (let fn of brandRules) {
-                try {
-                    const formatted = fn(code);
-                    if (formatted && !results.includes(formatted)) results.push(formatted);
-                } catch { }
+            let result = "Unsupported format.";
+
+            // Карта брендов
+            const brandMap = {
+                'alfa': processMoparNumber,
+                'jeep': processMoparNumber,
+                'dodge': processMoparNumber,
+                'ram': processMoparNumber,
+                'chrysler': processMoparNumber,
+                'toyota': processToyotaOrSubaruNumber,
+                'subaru': processToyotaOrSubaruNumber,
+                'hyundai': processHyundaiKiaGenesisNumber,
+                'kia': processHyundaiKiaGenesisNumber,
+                'genesis': processHyundaiKiaGenesisNumber,
+                'lexus': processToyotaOrSubaruNumber,
+                'scion': processToyotaOrSubaruNumber,
+                'maserati': processMaseratiNumber,
+                'nissan': processNissanNumber,
+                'infiniti': processNissanNumber,
+                'mazda': processMazdaNumber,
+                'mitsubishi': processMitsubishiNumber,
+                'tesla': processTeslaNumber,
+                'volkswagen': processVagNumber,
+                'audi': processVagNumber,
+                'porsche': processVagNumber,
+                'mercedes': processMercedesNumber,
+                'bmw': processBmwNumber,
+                'mini': processBmwNumber,
+                'ford': processFordNumber,
+                'lincoln': processFordNumber,
+                'chevrolet': processFordNumber,
+                'gmc': processFordNumber,
+                'cadillac': processFordNumber,
+                'buick': processFordNumber,
+                'land rover': processLandRoverNumber,
+                'jaguar': processLandRoverNumber,
+                'honda': processHondaNumber,
+                'acura': processHondaNumber
+            };
+
+            // Поиск функции по бренду
+            for (const [brandKey, processor] of Object.entries(brandMap)) {
+                if (selectedBrand.includes(brandKey)) {
+                    result = processor(input);
+                    break;
+                }
             }
 
-            resultsBox.innerHTML = results.map(r => `<p>${r}</p>`).join('');
-            resultsBox.classList.add('show');
+            // Отображение результата
+            if (selectedBrand.includes('mercedes') && result.includes('|')) {
+                // спец. логика для Mercedes
+                const resultContainer = document.createElement('div');
+                resultContainer.classList.add('result-item');
+                resultContainer.style.display = 'flex';
+                resultContainer.style.flexWrap = 'wrap';
+                resultContainer.style.gap = '8px';
+
+                const resultParts = result.split('|').map(r => r.trim());
+
+                resultParts.forEach(res => {
+                    const partWrapper = document.createElement('div');
+                    partWrapper.classList.add('result-item-hover');
+                    partWrapper.style.cursor = 'pointer';
+                    partWrapper.style.padding = '4px 8px';
+                    partWrapper.style.border = '1px solid #ddd';
+                    partWrapper.style.borderRadius = '6px';
+
+                    partWrapper.onclick = () => navigator.clipboard.writeText(res);
+
+                    const resultText = document.createElement('span');
+                    resultText.textContent = res;
+
+                    partWrapper.appendChild(resultText);
+                    resultContainer.appendChild(partWrapper);
+                });
+
+                resultsDiv.classList.add('show');
+                resultsDiv.appendChild(resultContainer);
+
+            } else {
+                // универсальный вывод для всех остальных
+                const resultItem = document.createElement('div');
+                resultItem.classList.add('result-item');
+                resultItem.textContent = result;
+
+                if (result !== "Unsupported format.") {
+                    resultItem.style.cursor = 'pointer';
+                    resultItem.onclick = () => navigator.clipboard.writeText(result);
+                } else {
+                    resultItem.classList.add('result-disabled');
+                }
+
+                resultsDiv.classList.add('show');
+                resultsDiv.appendChild(resultItem);
+            }
+        }
+
+        // =================== ФУНКЦИИ РАЗДЕЛЕНИЯ ===================
+        function processMoparNumber(number) {
+            const cleanNumber = number.replace(/[-\s]/g, '').toUpperCase();
+
+            // Mopar специфичные форматы
+            if (cleanNumber.length === 7) {
+                // Формат: 1234567 или 12345AB
+                if (/^\d+$/.test(cleanNumber)) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5)}`;
+                } else {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5)}`;
+                }
+            }
+
+            if (cleanNumber.length === 8) {
+                // Формат: 1234567A или 1234ABCD
+                return `${cleanNumber} / ${cleanNumber.slice(0, 4)} ${cleanNumber.slice(4)}`;
+            }
+
+            if (cleanNumber.length === 9) {
+                // Формат: 123456789 или ABC123456
+                if (/^\d+$/.test(cleanNumber)) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5)}`;
+                } else {
+                    const match = cleanNumber.match(/^([A-Z]+)(\d+)$/);
+                    if (match) {
+                        return `${cleanNumber} / ${match[1]} ${match[2]}`;
+                    }
+                }
+            }
+
+            if (cleanNumber.length === 10) {
+                // Формат: 1234567890 или 123-456-789-0
+                return `${cleanNumber} / ${cleanNumber.slice(0, 3)} ${cleanNumber.slice(3, 6)} ${cleanNumber.slice(6, 9)} ${cleanNumber.slice(9)}`;
+            }
+
+            // Универсальная обработка с дефисами
+            if (number.includes('-')) {
+                const parts = number.split('-');
+                if (parts.length >= 2) {
+                    return `${cleanNumber} / ${parts.join(' ')}`;
+                }
+            }
+
+            return "Unsupported Mopar format.";
+        }
+
+        function processHyundaiKiaGenesisNumber(number) {
+            const numberWithoutDashes = number.replace(/-/g, '');
+
+            // Убираем возможные точки или другие разделители
+            const cleanNumber = numberWithoutDashes.replace(/[.\s]/g, '');
+
+            // Форматы Hyundai/Kia/Genesis обычно имеют длину 8-14 символов
+            if (cleanNumber.length >= 8 && cleanNumber.length <= 14) {
+                // Проверяем различные форматы
+
+                // Формат 1: XXXXX-XXXXX (8+5=13 символов)
+                if (cleanNumber.length === 13) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)}-${cleanNumber.slice(5, 10)}-${cleanNumber.slice(10)} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5, 10)} ${cleanNumber.slice(10)}`;
+                }
+
+                // Формат 2: XXXXXXXX (8 символов)
+                if (cleanNumber.length === 8) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 4)} ${cleanNumber.slice(4)}`;
+                }
+
+                // Формат 3: XXXXXXXXXX (10 символов)
+                if (cleanNumber.length === 10) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5)}`;
+                }
+
+                // Формат 4: XXXXXXXXXXXX (12 символов)
+                if (cleanNumber.length === 12) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5, 10)} ${cleanNumber.slice(10)}`;
+                }
+
+                // Формат 5: XXXXXXXXXXXXXX (14 символов)
+                if (cleanNumber.length === 14) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5, 10)} ${cleanNumber.slice(10)}`;
+                }
+
+                // Универсальный формат для других длин
+                if (cleanNumber.length === 9 || cleanNumber.length === 11) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5)}`;
+                }
+            }
+
+            // Обработка номеров с дефисами
+            if (number.includes('-')) {
+                const parts = number.split('-');
+                const cleanNumber = parts.join('');
+
+                if (parts.length === 2) {
+                    return `${cleanNumber} / ${parts[0]} ${parts[1]}`;
+                }
+                if (parts.length === 3) {
+                    return `${cleanNumber} / ${parts[0]}${parts[1]} ${parts[2]} / ${parts[0]} ${parts[1]} ${parts[2]}`;
+                }
+            }
+
+            return "Unsupported format.";
+        }
+
+        function processToyotaOrSubaruNumber(number) {
+            if (number.length === 10) {
+                return `${number} / ${number.slice(0, 5)} ${number.slice(5)}`;
+            }
+            if (number.length > 10) {
+                const mainPart = number.slice(0, 10);
+                const suffix = number.slice(10);
+                return `${number} / ${mainPart} ${suffix} / ${mainPart.slice(0, 5)} ${mainPart.slice(5)} ${suffix}`;
+            }
+            return "Unsupported format.";
+        }
+
+        function processMaseratiNumber(number) {
+            const cleanNumber = number.replace(/[-\s]/g, '').toUpperCase();
+
+            // Maserati специфичные префиксы
+            if (cleanNumber.startsWith('AM') || cleanNumber.startsWith('MA')) {
+                if (cleanNumber.length === 9) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 2)} ${cleanNumber.slice(2)}`;
+                }
+                if (cleanNumber.length === 10) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 2)} ${cleanNumber.slice(2, 6)} ${cleanNumber.slice(6)}`;
+                }
+            }
+
+            // Чисто числовые форматы
+            if (/^\d+$/.test(cleanNumber)) {
+                if (cleanNumber.length === 9) {
+                    return cleanNumber;
+                }
+                if (cleanNumber.length === 10) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5)}`;
+                }
+                if (cleanNumber.length > 10) {
+                    const core = cleanNumber.slice(-9); // последние 9 цифр - ядро номера
+                    const prefix = cleanNumber.slice(0, -9);
+                    return `${cleanNumber} / ${prefix} ${core} / ${prefix} ${core.slice(0, 5)} ${core.slice(5)}`;
+                }
+            }
+
+            // Универсальная обработка
+            if (cleanNumber.length >= 8 && cleanNumber.length <= 15) {
+                return `${cleanNumber} / ${cleanNumber.slice(0, 4)} ${cleanNumber.slice(4, 8)} ${cleanNumber.slice(8)}`;
+            }
+
+            return "Unsupported Maserati format.";
+        }
+
+        function processNissanNumber(number) {
+            if (number.length === 10) {
+                return `${number} / ${number.slice(0, 5)} ${number.slice(5)}`;
+            }
+            return "Unsupported format.";
+        }
+
+        function processMazdaNumber(number) {
+            if (number.length === 9 || number.length === 10) {
+                return `${number} / ${number.slice(0, 4)} ${number.slice(4, 6)} ${number.slice(6)}`;
+            }
+            if (number.length >= 11 && number.length <= 13) {
+                return `${number} / ${number.slice(0, number.length - 2)} ${number.slice(-2)} / ${number.slice(0, 4)} ${number.slice(4, 6)} ${number.slice(6, number.length - 2)} ${number.slice(-2)}`;
+            }
+            return "Unsupported format.";
+        }
+
+        function processMitsubishiNumber(number) {
+            if (number.length === 8) {
+                return `${number} / ${number.slice(0, 4)} ${number.slice(4)}`;
+            }
+            if (number.length >= 10) {
+                return `${number} / ${number.slice(0, 8)} ${number.slice(8)} / ${number.slice(0, 4)} ${number.slice(4, 8)} ${number.slice(8)}`;
+            }
+            return "Unsupported format.";
+        }
+
+        function processTeslaNumber(number) {
+            const cleanNumber = number.replace(/[-\s]/g, '').toUpperCase();
+
+            // Tesla специфичные форматы
+            if (cleanNumber.startsWith('TESLA') || cleanNumber.startsWith('TL')) {
+                if (cleanNumber.length === 10) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5)}`;
+                }
+                if (cleanNumber.length === 11) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5, 8)} ${cleanNumber.slice(8)}`;
+                }
+                if (cleanNumber.length === 12) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5, 9)} ${cleanNumber.slice(9)}`;
+                }
+            }
+
+            // Числовые форматы Tesla
+            if (/^\d+$/.test(cleanNumber)) {
+                if (cleanNumber.length === 9) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 3)} ${cleanNumber.slice(3, 6)} ${cleanNumber.slice(6)}`;
+                }
+                if (cleanNumber.length === 10) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 4)} ${cleanNumber.slice(4, 7)} ${cleanNumber.slice(7)}`;
+                }
+            }
+
+            // Буквенно-цифровые форматы
+            if (cleanNumber.length >= 8 && cleanNumber.length <= 15) {
+                const match = cleanNumber.match(/^([A-Z]{2,5})(\d+)$/);
+                if (match) {
+                    return `${cleanNumber} / ${match[1]} ${match[2]}`;
+                }
+            }
+
+            return "Unsupported Tesla format.";
+        }
+
+        function processVagNumber(number) {
+            if (number.length <= 9) {
+                return `${number} / ${number.slice(0, 3)} ${number.slice(3, 6)} ${number.slice(6)}`;
+            }
+            if (number.length >= 10 && number.length <= 12) {
+                return `${number} / ${number.slice(0, 9)} / ${number.slice(0, 3)} ${number.slice(3, 6)} ${number.slice(6, 9)} ${number.slice(9)}`;
+            }
+            if (number.length === 14) {
+                return `${number} / ${number.slice(0, 9)} / ${number.slice(0, 11)} / ${number.slice(0, 3)} ${number.slice(3, 6)} ${number.slice(6, 9)} ${number.slice(9, 11)} ${number.slice(11)}`;
+            }
+            if (number.length === 15) {
+                return `${number} / ${number.slice(0, 9)} / ${number.slice(0, 12)} / ${number.slice(0, 3)} ${number.slice(3, 6)} ${number.slice(6, 9)} ${number.slice(9, 12)} ${number.slice(12)}`;
+            }
+            return "Unsupported format.";
+        }
+
+        function processMercedesNumber(number) {
+            const isWithA = number[0].toUpperCase() === 'A';
+            const raw = isWithA ? number.slice(1) : number;
+            const len = number.length;
+
+            const firstThree = raw.slice(0, 3);
+            const secondThree = raw.slice(3, 6);
+            const thirdTwo = raw.slice(6, 8);
+            const fourthTwo = raw.slice(8, 10);
+            const fifthTwo = raw.slice(10, 12);
+            const fifthFour = raw.slice(10);
+            const sixthFour = raw.slice(12);
+
+            const baseSplit = `${firstThree} ${secondThree} ${thirdTwo} ${fourthTwo}`;
+
+            if (isWithA) {
+                if (len === 11) return `${number} / ${raw} / ${baseSplit}`;
+                if (len === 13) return `${number} | ${raw.slice(0, -2)} / ${raw} / ${baseSplit} ${fifthFour}`;
+                if (len === 15) return `${number} | ${raw.slice(0, -4)} / ${raw} / ${baseSplit} ${fifthFour}`;
+                if (len === 17) return `${number} | ${raw.slice(0, -6)} / ${raw} / ${baseSplit} ${fifthTwo} ${sixthFour}`;
+            } else {
+                const withA = `A${number}`;
+                if (len === 10) return `${withA} / ${number} / ${baseSplit}`;
+                if (len === 12) return `${withA} | ${number.slice(0, -2)} / ${number} / ${baseSplit} ${fifthFour}`;
+                if (len === 14) return `${withA} | ${number.slice(0, -4)} / ${number} / ${baseSplit} ${fifthFour}`;
+                if (len === 16) return `${withA} | ${number.slice(0, -6)} / ${number} / ${baseSplit} ${fifthTwo} ${sixthFour}`;
+            }
+
+            if (len <= 9) {
+                return `${number} / ${number.slice(0, 3)} ${number.slice(3, 6)} ${number.slice(6)}`;
+            }
+            return "Unsupported format.";
+        }
+
+        function processBmwNumber(number) {
+            if (number.length === 7) {
+                return `${number} / ${number[0]} ${number.slice(1, 4)} ${number.slice(4)}`;
+            }
+            if (number.length === 11) {
+                return `${number} / ${number.slice(0, 4)} ${number.slice(4)} / ${number.slice(0, 2)} ${number.slice(2, 4)} ${number.slice(4, 5)} ${number.slice(5, 8)} ${number.slice(8)}`;
+            }
+            return "Unsupported format.";
+        }
+
+        function processFordNumber(number) {
+            if (number.includes('-')) {
+                const clean = number.replace(/-/g, '');
+                const parts = number.split('-');
+                if (parts.length === 3) {
+                    return `${clean} / ${parts[0]}${parts[1]} ${parts[2]} / ${parts[0]} ${parts[1]} ${parts[2]}`;
+                }
+                return `${clean} / ${parts.join(' ')}`;
+            }
+            if (number.length < 5) return "Unsupported format.";
+
+            const isLetter = ch => /^[A-Z]$/i.test(ch);
+            if (isLetter(number.at(-1))) {
+                let i = number.length - 1;
+                while (i >= 0 && isLetter(number[i])) i--;
+                const suffix = number.slice(i + 1);
+                return `${number} / ${number.slice(0, number.length - suffix.length)} ${suffix} / ${number.slice(0, 4)} ${number.slice(4, i + 1)} ${suffix}`;
+            } else {
+                return `${number} / ${number.slice(0, 4)} ${number.slice(4)}`;
+            }
+        }
+
+        function processLandRoverNumber(number) {
+            const cleanNumber = number.replace(/[-\s]/g, '').toUpperCase();
+
+            // Land Rover специфичные префиксы
+            if (cleanNumber.startsWith('LR') || cleanNumber.startsWith('L0')) {
+                if (cleanNumber.length === 8) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 2)} ${cleanNumber.slice(2)}`;
+                }
+                if (cleanNumber.length === 9) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 2)} ${cleanNumber.slice(2, 5)} ${cleanNumber.slice(5)}`;
+                }
+                if (cleanNumber.length === 10) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 2)} ${cleanNumber.slice(2, 6)} ${cleanNumber.slice(6)}`;
+                }
+            }
+
+            // Jaguar специфичные форматы
+            if (cleanNumber.startsWith('J') || cleanNumber.startsWith('C')) {
+                if (cleanNumber.length === 7) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 1)} ${cleanNumber.slice(1)}`;
+                }
+                if (cleanNumber.length === 8) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 1)} ${cleanNumber.slice(1, 4)} ${cleanNumber.slice(4)}`;
+                }
+            }
+
+            // Универсальная обработка
+            if (cleanNumber.length >= 6 && cleanNumber.length <= 12) {
+                return processFordNumber(cleanNumber);
+            }
+
+            return "Unsupported Land Rover/Jaguar format.";
+        }
+
+        function processHondaNumber(number) {
+            const numberWithoutDashes = number.replace(/-/g, '');
+
+            // Проверяем, является ли номер чисто цифровым или содержит буквы
+            const isDigitsOnly = /^\d+$/.test(numberWithoutDashes);
+            const hasLetters = /[A-Za-z]/.test(numberWithoutDashes);
+
+            // Для чисто цифровых номеров (обычно Honda)
+            if (isDigitsOnly) {
+                if (numberWithoutDashes.length === 5) {
+                    return numberWithoutDashes;
+                }
+                if (numberWithoutDashes.length === 7) {
+                    return `${numberWithoutDashes} / ${numberWithoutDashes.slice(0, 5)} ${numberWithoutDashes.slice(5)}`;
+                }
+                if (numberWithoutDashes.length === 8) {
+                    return `${numberWithoutDashes} / ${numberWithoutDashes.slice(0, 5)} ${numberWithoutDashes.slice(5)}`;
+                }
+                if (numberWithoutDashes.length === 10) {
+                    return `${numberWithoutDashes} / ${numberWithoutDashes.slice(0, 5)} ${numberWithoutDashes.slice(5, 8)} ${numberWithoutDashes.slice(8)}`;
+                }
+                if (numberWithoutDashes.length === 11) {
+                    return `${numberWithoutDashes} / ${numberWithoutDashes.slice(0, 5)} ${numberWithoutDashes.slice(5, 8)} ${numberWithoutDashes.slice(8)}`;
+                }
+            }
+
+            // Для номеров с буквами (обычно Acura)
+            if (hasLetters) {
+                // Формат Acura: обычно начинается с букв, затем цифры
+                if (numberWithoutDashes.length >= 8 && numberWithoutDashes.length <= 12) {
+                    // Находим границу между буквами и цифрами
+                    let digitStart = 0;
+                    while (digitStart < numberWithoutDashes.length &&
+                        /[A-Za-z]/.test(numberWithoutDashes[digitStart])) {
+                        digitStart++;
+                    }
+
+                    if (digitStart > 0 && digitStart < numberWithoutDashes.length) {
+                        const prefix = numberWithoutDashes.slice(0, digitStart);
+                        const digits = numberWithoutDashes.slice(digitStart);
+
+                        if (digits.length === 5) {
+                            return `${numberWithoutDashes} / ${prefix} ${digits}`;
+                        }
+                        if (digits.length === 7) {
+                            return `${numberWithoutDashes} / ${prefix} ${digits.slice(0, 5)} ${digits.slice(5)}`;
+                        }
+                        if (digits.length === 8) {
+                            return `${numberWithoutDashes} / ${prefix} ${digits.slice(0, 5)} ${digits.slice(5)}`;
+                        }
+                    }
+                }
+            }
+
+            // Универсальный формат для номеров с дефисами
+            if (number.includes('-')) {
+                const parts = number.split('-');
+                const cleanNumber = parts.join('');
+
+                if (parts.length === 2) {
+                    return `${cleanNumber} / ${parts[0]} ${parts[1]}`;
+                }
+                if (parts.length === 3) {
+                    return `${cleanNumber} / ${parts[0]}${parts[1]} ${parts[2]} / ${parts[0]} ${parts[1]} ${parts[2]}`;
+                }
+                if (parts.length === 4) {
+                    return `${cleanNumber} / ${parts[0]}${parts[1]}${parts[2]} ${parts[3]} / ${parts.join(' ')}`;
+                }
+            }
+
+            return "Unsupported format.";
         }
     </script>
 </body>
