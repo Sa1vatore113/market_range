@@ -408,7 +408,7 @@
                                     <input type="number" id="minPriceMileage" class="input-field">
                                 </label>
                                 <label class="block">
-                                    Максимальний пробіг (миль, дешева деталь):
+                                    Максимальний пробіг (тис. миль, дешева деталь):
                                     <input type="number" id="maxMileage" class="input-field">
                                 </label>
                                 <label class="block">
@@ -416,7 +416,7 @@
                                     <input type="number" id="maxPriceMileage" class="input-field">
                                 </label>
                                 <label class="block">
-                                    Мінімальний пробіг (миль, дорога деталь):
+                                    Мінімальний пробіг (тис. миль, дорога деталь):
                                     <input type="number" id="minMileage" class="input-field">
                                 </label>
                             </div>
@@ -509,7 +509,7 @@
             div.classList.add('part-item');
             div.innerHTML = `
      <div class="flex items-center justify-between mb-2">
-            <label class="block mb-0">Деталь ${partCounter}: Пробіг (миль)</label>
+            <label class="block mb-0">Деталь ${partCounter}: Пробіг (тис. миль)</label>
             <button onclick="removePart(this)" class="text-red-400 hover:text-red-300 text-lg font-bold ml-2">×</button>
         </div>
         <input type="number" class="partMileage input-field">
@@ -524,7 +524,7 @@
             const partItems = document.querySelectorAll('.part-item');
             partItems.forEach((item, index) => {
                 const label = item.querySelector('label');
-                label.textContent = `Деталь ${index + 1}: Пробіг (миль)`;
+                label.textContent = `Деталь ${index + 1}: Пробіг (тис. миль)`;
             });
 
             partCounter = partItems.length;
