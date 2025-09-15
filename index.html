@@ -972,8 +972,8 @@
             <thead>
                 <tr>
                     <th>%</th>
-                    <th class="number-cell">Базова</th>
                     <th class="number-cell">Разом</th>
+                    <th class="number-cell">Базова</th>
                     <th>Знижка 20-25%</th>
                 </tr>
             </thead>
@@ -997,10 +997,12 @@
 
             tableHTML += `</tbody></table>`;
 
-            tableContainer.appendChild(tableHeader);
-            tableContainer.innerHTML += tableHTML;
+            resultBox.innerHTML = "";
+
+            tableContainer.innerHTML = tableHTML;  // сразу формируем таблицу
             resultBox.appendChild(tableContainer);
             resultBox.classList.add('show');
+
         }
 
         function processCode() {
