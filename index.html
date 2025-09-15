@@ -1121,116 +1121,106 @@
 
         // =================== ФУНКЦИИ РАЗДЕЛЕНИЯ ===================
         function processMoparNumber(number) {
+            // Очищаємо від пробілів і дефісів, приводимо до верхнього регістру
             const cleanNumber = number.replace(/[-\s]/g, '').toUpperCase();
 
-            // Mopar специфичные форматы
-            if (cleanNumber.length === 7) {
-                // Формат: 1234567 или 12345AB
-                if (/^\d+$/.test(cleanNumber)) {
-                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5)}`;
-                } else {
-                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5)}`;
+            // Перевіряємо, чи відповідає формату: 10 символів, останні 2 — літери
+            if (cleanNumber.length === 10 && /^[A-Z0-9]{8}[A-Z]{2}$/.test(cleanNumber)) {
+                return `${cleanNumber} / ${cleanNumber.slice(0, 8)} ${cleanNumber.slice(8)}`;
+            }
+
+            // Для числових номерів (залишаємо стару логіку, якщо потрібно)
+            const isDigitsOnly = /^\d+$/.test(cleanNumber);
+            if (isDigitsOnly) {
+                const firstChar = cleanNumber[0];
+                const secondChar = cleanNumber[1];
+                const lastChar = cleanNumber.at(-1);
+                const secondLastChar = cleanNumber.at(-2);
+
+                if (firstChar !== '0' && lastChar === '0' && secondLastChar !== '0') {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, -1)} ${lastChar}`;
                 }
-            }
-
-            if (cleanNumber.length === 8) {
-                // Формат: 1234567A или 1234ABCD
-                return `${cleanNumber} / ${cleanNumber.slice(0, 4)} ${cleanNumber.slice(4)}`;
-            }
-
-            if (cleanNumber.length === 9) {
-                // Формат: 123456789 или ABC123456
-                if (/^\d+$/.test(cleanNumber)) {
-                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5)}`;
-                } else {
-                    const match = cleanNumber.match(/^([A-Z]+)(\d+)$/);
-                    if (match) {
-                        return `${cleanNumber} / ${match[1]} ${match[2]}`;
-                    }
+                if (firstChar === '0' && secondChar !== '0' && lastChar !== '0') {
+                    return `${cleanNumber} / ${firstChar} ${cleanNumber.slice(1)}`;
                 }
-            }
-
-            if (cleanNumber.length === 10) {
-                // Формат: 1234567890 или 123-456-789-0
-                return `${cleanNumber} / ${cleanNumber.slice(0, 3)} ${cleanNumber.slice(3, 6)} ${cleanNumber.slice(6, 9)} ${cleanNumber.slice(9)}`;
-            }
-
-            // Универсальная обработка с дефисами
-            if (number.includes('-')) {
-                const parts = number.split('-');
-                if (parts.length >= 2) {
-                    return `${cleanNumber} / ${parts.join(' ')}`;
+                if (firstChar === '0' && secondChar !== '0' && lastChar === '0' && secondLastChar !== '0') {
+                    return `${cleanNumber} / ${firstChar} ${cleanNumber.slice(1)} / ${firstChar} ${cleanNumber.slice(1, -1)} ${lastChar}`;
                 }
+                if (firstChar !== '0' && lastChar === '0' && secondLastChar === '0') {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, -2)} ${cleanNumber.slice(-2)}`;
+                }
+                if (firstChar === '0' && secondChar === '0' && lastChar !== '0') {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 2)} ${cleanNumber.slice(2)}`;
+                }
+                if (firstChar === '0' && secondChar === '0' && lastChar === '0' && secondLastChar === '0') {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 2)} ${cleanNumber.slice(2)} / ${cleanNumber.slice(0, 2)} ${cleanNumber.slice(2, -2)} ${cleanNumber.slice(-2)}`;
+                }
+                if (firstChar === '0' && secondChar === '0' && lastChar === '0') {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 2)} ${cleanNumber.slice(2)} / ${cleanNumber.slice(0, 2)} ${cleanNumber.slice(2, -1)} ${lastChar}`;
+                }
+                return "Unsupported format.";
             }
 
-            return "Unsupported Mopar format.";
+            return "Unsupported format.";
         }
 
         function processHyundaiKiaGenesisNumber(number) {
-            const numberWithoutDashes = number.replace(/-/g, '');
+            // Сначала удаляем все дефисы
+            const cleanNumber = number.replace(/-/g, '');
 
             // Убираем возможные точки или другие разделители
-            const cleanNumber = numberWithoutDashes.replace(/[.\s]/g, '');
+            const finalCleanNumber = cleanNumber.replace(/[.\s]/g, '');
 
             // Форматы Hyundai/Kia/Genesis обычно имеют длину 8-14 символов
-            if (cleanNumber.length >= 8 && cleanNumber.length <= 14) {
+            if (finalCleanNumber.length >= 8 && finalCleanNumber.length <= 14) {
                 // Проверяем различные форматы
 
                 // Формат 1: XXXXX-XXXXX (8+5=13 символов)
-                if (cleanNumber.length === 13) {
-                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)}-${cleanNumber.slice(5, 10)}-${cleanNumber.slice(10)} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5, 10)} ${cleanNumber.slice(10)}`;
+                if (finalCleanNumber.length === 13) {
+                    return `${finalCleanNumber} / ${finalCleanNumber.slice(0, 5)} ${finalCleanNumber.slice(5, 10)} ${finalCleanNumber.slice(10)}`;
                 }
 
                 // Формат 2: XXXXXXXX (8 символов)
-                if (cleanNumber.length === 8) {
-                    return `${cleanNumber} / ${cleanNumber.slice(0, 4)} ${cleanNumber.slice(4)}`;
+                if (finalCleanNumber.length === 8) {
+                    return `${finalCleanNumber} / ${finalCleanNumber.slice(0, 4)} ${finalCleanNumber.slice(4)}`;
                 }
 
                 // Формат 3: XXXXXXXXXX (10 символов)
-                if (cleanNumber.length === 10) {
-                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5)}`;
+                if (finalCleanNumber.length === 10) {
+                    return `${finalCleanNumber} / ${finalCleanNumber.slice(0, 5)} ${finalCleanNumber.slice(5)}`;
                 }
 
                 // Формат 4: XXXXXXXXXXXX (12 символов)
-                if (cleanNumber.length === 12) {
-                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5, 10)} ${cleanNumber.slice(10)}`;
+                if (finalCleanNumber.length === 12) {
+                    return `${finalCleanNumber} / ${finalCleanNumber.slice(0, 5)} ${finalCleanNumber.slice(5, 10)} ${finalCleanNumber.slice(10)}`;
                 }
 
                 // Формат 5: XXXXXXXXXXXXXX (14 символов)
-                if (cleanNumber.length === 14) {
-                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5, 10)} ${cleanNumber.slice(10)}`;
+                if (finalCleanNumber.length === 14) {
+                    return `${finalCleanNumber} / ${finalCleanNumber.slice(0, 5)} ${finalCleanNumber.slice(5, 10)} ${finalCleanNumber.slice(10)}`;
                 }
 
                 // Универсальный формат для других длин
-                if (cleanNumber.length === 9 || cleanNumber.length === 11) {
-                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5)}`;
-                }
-            }
-
-            // Обработка номеров с дефисами
-            if (number.includes('-')) {
-                const parts = number.split('-');
-                const cleanNumber = parts.join('');
-
-                if (parts.length === 2) {
-                    return `${cleanNumber} / ${parts[0]} ${parts[1]}`;
-                }
-                if (parts.length === 3) {
-                    return `${cleanNumber} / ${parts[0]}${parts[1]} ${parts[2]} / ${parts[0]} ${parts[1]} ${parts[2]}`;
+                if (finalCleanNumber.length === 9 || finalCleanNumber.length === 11) {
+                    return `${finalCleanNumber} / ${finalCleanNumber.slice(0, 5)} ${finalCleanNumber.slice(5)}`;
                 }
             }
 
             return "Unsupported format.";
         }
 
+
         function processToyotaOrSubaruNumber(number) {
-            if (number.length === 10) {
-                return `${number} / ${number.slice(0, 5)} ${number.slice(5)}`;
+            // Clean spaces and hyphens, convert to uppercase
+            const cleanNumber = number.replace(/[-\s]/g, '').toUpperCase();
+
+            if (cleanNumber.length === 10) {
+                return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5)}`;
             }
-            if (number.length > 10) {
-                const mainPart = number.slice(0, 10);
-                const suffix = number.slice(10);
-                return `${number} / ${mainPart} ${suffix} / ${mainPart.slice(0, 5)} ${mainPart.slice(5)} ${suffix}`;
+            if (cleanNumber.length > 10) {
+                const mainPart = cleanNumber.slice(0, 10);
+                const suffix = cleanNumber.slice(10);
+                return `${cleanNumber} / ${mainPart} ${suffix} / ${mainPart.slice(0, 5)} ${mainPart.slice(5)} ${suffix}`;
             }
             return "Unsupported format.";
         }
@@ -1272,50 +1262,110 @@
         }
 
         function processNissanNumber(number) {
-            if (number.length === 10) {
-                return `${number} / ${number.slice(0, 5)} ${number.slice(5)}`;
+            // Clean spaces and hyphens, convert to uppercase
+            const cleanNumber = number.replace(/[-\s]/g, '').toUpperCase();
+
+            if (cleanNumber.length === 10) {
+                return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5)}`;
             }
             return "Unsupported format.";
         }
-
         function processMazdaNumber(number) {
-            if (number.length === 9 || number.length === 10) {
-                return `${number} / ${number.slice(0, 4)} ${number.slice(4, 6)} ${number.slice(6)}`;
+            if (!number || typeof number !== "string") return "Unsupported format.";
+
+            // Убираем дефисы и пробелы, приводим к верхнему регистру
+            const cleanNumber = number.replace(/[-\s]/g, "").toUpperCase();
+
+            // Проверка допустимых символов
+            if (/[^A-Z0-9]/.test(cleanNumber)) {
+                return "Unsupported format.";
             }
-            if (number.length >= 11 && number.length <= 13) {
-                return `${number} / ${number.slice(0, number.length - 2)} ${number.slice(-2)} / ${number.slice(0, 4)} ${number.slice(4, 6)} ${number.slice(6, number.length - 2)} ${number.slice(-2)}`;
+
+            const len = cleanNumber.length;
+            const variants = new Set();
+
+            // Всегда добавляем полностью слитный вариант
+            variants.add(cleanNumber);
+
+            // Базовый вариант: 4 + 2 + остаток
+            if (len >= 7) {
+                const p1 = cleanNumber.slice(0, 4);
+                const p2 = cleanNumber.slice(4, 6);
+                const rest = cleanNumber.slice(6);
+
+                if (rest) {
+                    variants.add(`${p1} ${p2} ${rest}`);
+                }
             }
-            return "Unsupported format.";
+
+            // Если в конце есть 2-символьный суффикс (цветовой код и т.п.)
+            if (len >= 9) {
+                const body = cleanNumber.slice(0, len - 2);
+                const suffix = cleanNumber.slice(-2);
+
+                // Отделённый суффикс
+                variants.add(`${body} ${suffix}`);
+
+                // Раскладка 4 + 2 + середина + суффикс
+                if (len > 8) {
+                    const p1 = cleanNumber.slice(0, 4);
+                    const p2 = cleanNumber.slice(4, 6);
+                    const middle = cleanNumber.slice(6, len - 2);
+                    if (middle) {
+                        variants.add(`${p1} ${p2} ${middle} ${suffix}`);
+                    }
+                }
+            }
+
+            return Array.from(variants).join(" / ");
         }
 
         function processMitsubishiNumber(number) {
-            if (number.length === 8) {
-                return `${number} / ${number.slice(0, 4)} ${number.slice(4)}`;
+            if (!number || typeof number !== "string") return "Unsupported format.";
+
+            // Универсальная очистка
+            const clean = number.replace(/[-\s]/g, "").toUpperCase();
+
+            if (/[^A-Z0-9]/.test(clean)) {
+                return "Unsupported format.";
             }
-            if (number.length >= 10) {
-                return `${number} / ${number.slice(0, 8)} ${number.slice(8)} / ${number.slice(0, 4)} ${number.slice(4, 8)} ${number.slice(8)}`;
+
+            const len = clean.length;
+            const variants = new Set();
+
+            variants.add(clean); // всегда добавляем слитно
+
+            if (len === 8) {
+                variants.add(`${clean.slice(0, 4)} ${clean.slice(4)}`);
+            } else if (len >= 10) {
+                variants.add(`${clean.slice(0, 8)} ${clean.slice(8)}`);
+                variants.add(`${clean.slice(0, 4)} ${clean.slice(4, 8)} ${clean.slice(8)}`);
             }
-            return "Unsupported format.";
+
+            return Array.from(variants).join(" / ");
         }
+
 
         function processTeslaNumber(number) {
             const cleanNumber = number.replace(/[-\s]/g, '').toUpperCase();
 
-            // Tesla специфичные форматы
-            if (cleanNumber.startsWith('TESLA') || cleanNumber.startsWith('TL')) {
-                if (cleanNumber.length === 10) {
-                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5)}`;
-                }
-                if (cleanNumber.length === 11) {
-                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5, 8)} ${cleanNumber.slice(8)}`;
-                }
-                if (cleanNumber.length === 12) {
-                    return `${cleanNumber} / ${cleanNumber.slice(0, 5)} ${cleanNumber.slice(5, 9)} ${cleanNumber.slice(9)}`;
-                }
+            // Обработка формата типа "1582886-00-b" -> "158288600B"
+            if (/^\d{7}-\d{2}-[A-Za-z]$/.test(number)) {
+                const base = number.replace(/-/g, '').toUpperCase();
+                return `${base} / ${base.slice(0, 7)} ${base.slice(7, 9)} ${base.slice(9)} / ${base.slice(0, 9)} ${base.slice(9)}`;
             }
 
-            // Числовые форматы Tesla
+            // Обработка формата типа "158288600 b" -> "158288600B"
+            if (/^\d{9}\s+[A-Za-z]$/i.test(number)) {
+                const base = number.replace(/\s+/g, '').toUpperCase();
+                return `${base} / ${base.slice(0, 7)} ${base.slice(7, 9)} ${base.slice(9)} / ${base.slice(0, 9)} ${base.slice(9)}`;
+            }
+
+            // Обработка числовых форматов Tesla
             if (/^\d+$/.test(cleanNumber)) {
+                if (cleanNumber.length === 7) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 3)} ${cleanNumber.slice(3, 6)} ${cleanNumber.slice(6)}`;
+                }
                 if (cleanNumber.length === 9) {
                     return `${cleanNumber} / ${cleanNumber.slice(0, 3)} ${cleanNumber.slice(3, 6)} ${cleanNumber.slice(6)}`;
                 }
@@ -1324,98 +1374,254 @@
                 }
             }
 
-            // Буквенно-цифровые форматы
+            // Обработка буквенно-цифровых форматов (например: 108489400B)
             if (cleanNumber.length >= 8 && cleanNumber.length <= 15) {
-                const match = cleanNumber.match(/^([A-Z]{2,5})(\d+)$/);
+                // Форматы с суффиксом (например: 123456700B)
+                if (cleanNumber.length === 10 && /^\d{9}[A-Z]$/.test(cleanNumber)) {
+                    return `${cleanNumber} / ${cleanNumber.slice(0, 7)} ${cleanNumber.slice(7, 9)} ${cleanNumber.slice(9)} / ${cleanNumber.slice(0, 9)} ${cleanNumber.slice(9)}`;
+                }
+
+                // Универсальная обработка для других длин
+                const match = cleanNumber.match(/^(\d+)([A-Z]*)$/);
                 if (match) {
-                    return `${cleanNumber} / ${match[1]} ${match[2]}`;
+                    const digits = match[1];
+                    const letters = match[2];
+
+                    if (letters) {
+                        if (digits.length === 7) {
+                            return `${cleanNumber} / ${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)} ${letters} / ${digits} ${letters}`;
+                        }
+                        if (digits.length === 9) {
+                            return `${cleanNumber} / ${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)} ${letters} / ${digits} ${letters}`;
+                        }
+                        return `${cleanNumber} / ${digits} ${letters}`;
+                    }
+
+                    // Только цифры
+                    if (digits.length === 7) {
+                        return `${cleanNumber} / ${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+                    }
+                }
+            }
+
+            // Форматы с префиксом TESLA/TL
+            if (cleanNumber.startsWith('TESLA') || cleanNumber.startsWith('TL')) {
+                const prefix = cleanNumber.startsWith('TESLA') ? 'TESLA' : 'TL';
+                const rest = cleanNumber.slice(prefix.length);
+
+                if (rest.length === 7) {
+                    return `${cleanNumber} / ${prefix} ${rest.slice(0, 3)} ${rest.slice(3, 6)} ${rest.slice(6)}`;
+                }
+                if (rest.length === 9) {
+                    return `${cleanNumber} / ${prefix} ${rest.slice(0, 3)} ${rest.slice(3, 6)} ${rest.slice(6)}`;
                 }
             }
 
             return "Unsupported Tesla format.";
         }
-
         function processVagNumber(number) {
-            if (number.length <= 9) {
-                return `${number} / ${number.slice(0, 3)} ${number.slice(3, 6)} ${number.slice(6)}`;
-            }
-            if (number.length >= 10 && number.length <= 12) {
-                return `${number} / ${number.slice(0, 9)} / ${number.slice(0, 3)} ${number.slice(3, 6)} ${number.slice(6, 9)} ${number.slice(9)}`;
-            }
-            if (number.length === 14) {
-                return `${number} / ${number.slice(0, 9)} / ${number.slice(0, 11)} / ${number.slice(0, 3)} ${number.slice(3, 6)} ${number.slice(6, 9)} ${number.slice(9, 11)} ${number.slice(11)}`;
-            }
-            if (number.length === 15) {
-                return `${number} / ${number.slice(0, 9)} / ${number.slice(0, 12)} / ${number.slice(0, 3)} ${number.slice(3, 6)} ${number.slice(6, 9)} ${number.slice(9, 12)} ${number.slice(12)}`;
-            }
-            return "Unsupported format.";
-        }
+            const cleanNumber = number.replace(/[-\s]/g, '').toUpperCase();
+            const variants = [];
 
+            // Добавляем оригинальный код первым
+            variants.push(cleanNumber);
+
+            // Определяем паттерны VAG
+            const VAG_PATTERNS = [
+                // Формат 4N1713140C3Q7 → 4N1 713 140 C 3Q7
+                { regex: /^(4[NM][0-9])([0-9]{3})([0-9]{3})([A-Z])([A-Z0-9]{3})$/, type: '4N4M' },
+                // Формат 4M1867106H24A → 4M1 867 106 H 24 A
+                { regex: /^(4M[0-9])([0-9]{5})([A-Z])([0-9]{2})([A-Z])$/, type: '4M' },
+                // Формат 8W...
+                { regex: /^(8W)([0-9]{3})([0-9]{3})([0-9]{3})([A-Z0-9]*)$/, type: '8W' }
+            ];
+
+            let matched = false;
+
+            for (const pattern of VAG_PATTERNS) {
+                const match = cleanNumber.match(pattern.regex);
+                if (match) {
+                    matched = true;
+                    const groups = match.slice(1);
+
+                    // Добавляем группировку с пробелами
+                    variants.push(groups.join(' '));
+
+                    // Добавляем промежуточные варианты для 4N/4M
+                    if (pattern.type === '4N4M') {
+                        variants.push(groups.slice(0, 3).join('')); // первые три группы
+                        variants.push(groups.slice(0, 4).join('')); // первые четыре группы
+                    } else if (pattern.type === '4M') {
+                        variants.push(groups.slice(0, 3).join('')); // первые три группы
+                    }
+
+                    break; // останавливаемся на первом совпадении
+                }
+            }
+
+            // Если ни один паттерн не подошел, fallback
+            if (!matched) {
+                // Разделение на группы по 3 символа
+                if (cleanNumber.length >= 8) {
+                    let formatted = '';
+                    for (let i = 0; i < cleanNumber.length; i += 3) {
+                        if (formatted) formatted += ' ';
+                        formatted += cleanNumber.slice(i, i + 3);
+                    }
+                    variants.push(formatted);
+                }
+
+                // Добавляем вариант с разделением после 9 символов
+                if (cleanNumber.length > 9) {
+                    variants.push(`${cleanNumber.slice(0, 9)} ${cleanNumber.slice(9)}`);
+                }
+            }
+
+            // Возвращаем уникальные варианты, упорядоченные по добавлению
+            return Array.from(new Set(variants)).join(' / ');
+        }
         function processMercedesNumber(number) {
-            const isWithA = number[0].toUpperCase() === 'A';
-            const raw = isWithA ? number.slice(1) : number;
-            const len = number.length;
+            if (!number || typeof number !== 'string') return "Unsupported format.";
 
-            const firstThree = raw.slice(0, 3);
-            const secondThree = raw.slice(3, 6);
-            const thirdTwo = raw.slice(6, 8);
-            const fourthTwo = raw.slice(8, 10);
-            const fifthTwo = raw.slice(10, 12);
-            const fifthFour = raw.slice(10);
-            const sixthFour = raw.slice(12);
+            // Чистим строку от дефисов и пробелов, приводим к верхнему регистру
+            const cleanAll = number.replace(/[-\s]/g, '').toUpperCase();
 
-            const baseSplit = `${firstThree} ${secondThree} ${thirdTwo} ${fourthTwo}`;
+            // Проверка на допустимые символы
+            if (/[^A-Z0-9]/.test(cleanAll)) return "Unsupported format.";
 
-            if (isWithA) {
-                if (len === 11) return `${number} / ${raw} / ${baseSplit}`;
-                if (len === 13) return `${number} | ${raw.slice(0, -2)} / ${raw} / ${baseSplit} ${fifthFour}`;
-                if (len === 15) return `${number} | ${raw.slice(0, -4)} / ${raw} / ${baseSplit} ${fifthFour}`;
-                if (len === 17) return `${number} | ${raw.slice(0, -6)} / ${raw} / ${baseSplit} ${fifthTwo} ${sixthFour}`;
+            const variants = new Set();
+
+            // Определяем есть ли префикс "A"
+            let hasA = cleanAll.startsWith('A');
+            let raw = hasA ? cleanAll.slice(1) : cleanAll;
+
+            // Общий вариант: слитно
+            variants.add(cleanAll);
+            if (hasA) {
+                variants.add(raw);
             } else {
-                const withA = `A${number}`;
-                if (len === 10) return `${withA} / ${number} / ${baseSplit}`;
-                if (len === 12) return `${withA} | ${number.slice(0, -2)} / ${number} / ${baseSplit} ${fifthFour}`;
-                if (len === 14) return `${withA} | ${number.slice(0, -4)} / ${number} / ${baseSplit} ${fifthFour}`;
-                if (len === 16) return `${withA} | ${number.slice(0, -6)} / ${number} / ${baseSplit} ${fifthTwo} ${sixthFour}`;
+                variants.add('A' + raw);
             }
 
-            if (len <= 9) {
-                return `${number} / ${number.slice(0, 3)} ${number.slice(3, 6)} ${number.slice(6)}`;
+            const len = raw.length;
+
+            // Вариант с разбиением 3 + 3 + 2 + 2 + остальное (если есть)
+            if (len >= 10) {
+                const p1 = raw.slice(0, 3);
+                const p2 = raw.slice(3, 6);
+                const p3 = raw.slice(6, 8);
+                const p4 = raw.slice(8, 10);
+                const rest = raw.slice(10);
+
+                let splitCore = `${p1} ${p2} ${p3} ${p4}`;
+                if (rest) splitCore += ` ${rest}`;
+
+                variants.add((hasA ? 'A' : '') + raw);         // слитно с A или без
+                variants.add(splitCore);                     // 3-3-2-2-rest (с префиксом A, если есть)
+                variants.add((hasA ? 'A' : '') + splitCore);  // с включённым префиксом
+
+                // Также вариант без “A” если был “A”
+                if (hasA) {
+                    variants.add(splitCore); // без A
+                }
             }
-            return "Unsupported format.";
+
+            // Вариант: отделить последние N символов (например 2-4) как суффикс
+            if (len > 6) {  // минимум чтобы было что отделять
+                for (let suffixLen = 2; suffixLen <= 4; suffixLen++) {
+                    if (suffixLen < len) {
+                        const body = raw.slice(0, len - suffixLen);
+                        const suffix = raw.slice(len - suffixLen);
+                        // форматы
+                        variants.add(`${body} ${suffix}`);
+                        variants.add((hasA ? 'A' : '') + `${body} ${suffix}`);
+                        // возможно вариант с точки зрения 3-3-2-2 + suffix, если длина позволяется
+                        if (body.length >= 10) {
+                            // разбить body на 3+3+2+2 + оставшееся
+                            const bp1 = body.slice(0, 3);
+                            const bp2 = body.slice(3, 6);
+                            const bp3 = body.slice(6, 8);
+                            const bp4 = body.slice(8, 10);
+                            const restBody = body.slice(10);
+                            let bodySplit = `${bp1} ${bp2} ${bp3} ${bp4}`;
+                            if (restBody) bodySplit += ` ${restBody}`;
+                            // добавить суффикс
+                            variants.add(`${bodySplit} ${suffix}`);
+                            if (hasA) variants.add(`A${bodySplit} ${suffix}`);
+                        }
+                    }
+                }
+            }
+
+            // Вариант для коротких raw (например len<=9) — разбивка 3-3-остаток
+            if (len <= 9 && len >= 6) {
+                const p1 = raw.slice(0, 3);
+                const p2 = raw.slice(3, 6);
+                const rest = raw.slice(6);
+                if (rest) {
+                    variants.add(`${p1} ${p2} ${rest}`);
+                    if (hasA) variants.add(`A${p1} ${p2} ${rest}`);
+                }
+            }
+
+            // Привести варианты в массив, убрать дубликаты
+            const result = Array.from(variants).filter(v => v && v.length > 0);
+            return result.join(" / ");
         }
-
         function processBmwNumber(number) {
-            if (number.length === 7) {
-                return `${number} / ${number[0]} ${number.slice(1, 4)} ${number.slice(4)}`;
+            // Clean spaces and hyphens, convert to uppercase
+            const cleanNumber = number.replace(/[-\s]/g, '').toUpperCase();
+
+            if (cleanNumber.length === 7) {
+                return `${cleanNumber} / ${cleanNumber[0]} ${cleanNumber.slice(1, 4)} ${cleanNumber.slice(4)}`;
             }
-            if (number.length === 11) {
-                return `${number} / ${number.slice(0, 4)} ${number.slice(4)} / ${number.slice(0, 2)} ${number.slice(2, 4)} ${number.slice(4, 5)} ${number.slice(5, 8)} ${number.slice(8)}`;
+            if (cleanNumber.length === 11) {
+                return `${cleanNumber} / ${cleanNumber.slice(0, 4)} ${cleanNumber.slice(4)} / ${cleanNumber.slice(0, 2)} ${cleanNumber.slice(2, 4)} ${cleanNumber.slice(4, 5)} ${cleanNumber.slice(5, 8)} ${cleanNumber.slice(8)}`;
             }
             return "Unsupported format.";
         }
 
         function processFordNumber(number) {
-            if (number.includes('-')) {
-                const clean = number.replace(/-/g, '');
-                const parts = number.split('-');
+            // Сначала удаляем все дефисы
+            const cleanNumber = number.replace(/-/g, '');
+
+            if (cleanNumber.includes('-')) {
+                const parts = cleanNumber.split('-');
                 if (parts.length === 3) {
-                    return `${clean} / ${parts[0]}${parts[1]} ${parts[2]} / ${parts[0]} ${parts[1]} ${parts[2]}`;
+                    return `${cleanNumber} / ${parts[0]}${parts[1]} ${parts[2]} / ${parts[0]} ${parts[1]} ${parts[2]}`;
                 }
-                return `${clean} / ${parts.join(' ')}`;
+                return `${cleanNumber} / ${parts.join(' ')}`;
             }
-            if (number.length < 5) return "Unsupported format.";
+
+            if (cleanNumber.length < 5) return "Unsupported format.";
 
             const isLetter = ch => /^[A-Z]$/i.test(ch);
-            if (isLetter(number.at(-1))) {
-                let i = number.length - 1;
-                while (i >= 0 && isLetter(number[i])) i--;
-                const suffix = number.slice(i + 1);
-                return `${number} / ${number.slice(0, number.length - suffix.length)} ${suffix} / ${number.slice(0, 4)} ${number.slice(4, i + 1)} ${suffix}`;
+
+            if (isLetter(cleanNumber.at(-1))) {
+                let i = cleanNumber.length - 1;
+                while (i >= 0 && isLetter(cleanNumber[i])) i--;
+                const suffix = cleanNumber.slice(i + 1);
+                const mainPart = cleanNumber.slice(0, cleanNumber.length - suffix.length);
+
+                let digitStart = 0;
+                while (digitStart < mainPart.length && isLetter(mainPart[digitStart])) digitStart++;
+
+                const prefix = mainPart.slice(0, digitStart);
+                const digits = mainPart.slice(digitStart);
+
+                return `${cleanNumber} / ${mainPart} ${suffix} / ${prefix} ${digits} ${suffix}`;
             } else {
-                return `${number} / ${number.slice(0, 4)} ${number.slice(4)}`;
+                let digitStart = 0;
+                while (digitStart < cleanNumber.length && isLetter(cleanNumber[digitStart])) digitStart++;
+
+                const prefix = cleanNumber.slice(0, digitStart);
+                const digits = cleanNumber.slice(digitStart);
+
+                return `${cleanNumber} / ${prefix} ${digits}`;
             }
         }
+
+
 
         function processLandRoverNumber(number) {
             const cleanNumber = number.replace(/[-\s]/g, '').toUpperCase();
@@ -1452,76 +1658,107 @@
         }
 
         function processHondaNumber(number) {
-            const numberWithoutDashes = number.replace(/-/g, '');
+            const ERROR = "Unsupported format";
+            if (!number || typeof number !== 'string') return ERROR;
 
-            // Проверяем, является ли номер чисто цифровым или содержит буквы
-            const isDigitsOnly = /^\d+$/.test(numberWithoutDashes);
-            const hasLetters = /[A-Za-z]/.test(numberWithoutDashes);
+            const cleanNumber = number.replace(/[-\s]/g, '').toUpperCase();
 
-            // Для чисто цифровых номеров (обычно Honda)
-            if (isDigitsOnly) {
-                if (numberWithoutDashes.length === 5) {
-                    return numberWithoutDashes;
-                }
-                if (numberWithoutDashes.length === 7) {
-                    return `${numberWithoutDashes} / ${numberWithoutDashes.slice(0, 5)} ${numberWithoutDashes.slice(5)}`;
-                }
-                if (numberWithoutDashes.length === 8) {
-                    return `${numberWithoutDashes} / ${numberWithoutDashes.slice(0, 5)} ${numberWithoutDashes.slice(5)}`;
-                }
-                if (numberWithoutDashes.length === 10) {
-                    return `${numberWithoutDashes} / ${numberWithoutDashes.slice(0, 5)} ${numberWithoutDashes.slice(5, 8)} ${numberWithoutDashes.slice(8)}`;
-                }
-                if (numberWithoutDashes.length === 11) {
-                    return `${numberWithoutDashes} / ${numberWithoutDashes.slice(0, 5)} ${numberWithoutDashes.slice(5, 8)} ${numberWithoutDashes.slice(8)}`;
-                }
+            if (/[^A-Z0-9]/.test(cleanNumber)) {
+                return ERROR;
             }
 
-            // Для номеров с буквами (обычно Acura)
-            if (hasLetters) {
-                // Формат Acura: обычно начинается с букв, затем цифры
-                if (numberWithoutDashes.length >= 8 && numberWithoutDashes.length <= 12) {
-                    // Находим границу между буквами и цифрами
-                    let digitStart = 0;
-                    while (digitStart < numberWithoutDashes.length &&
-                        /[A-Za-z]/.test(numberWithoutDashes[digitStart])) {
-                        digitStart++;
+            const MIN_HONDA_LENGTH = 8;
+            const MAX_HONDA_LENGTH = 16;
+            if (cleanNumber.length < MIN_HONDA_LENGTH || cleanNumber.length > MAX_HONDA_LENGTH) {
+                return ERROR;
+            }
+
+            const isLetter = (ch) => /^[A-Z]$/.test(ch);
+            const isDigit = (ch) => /^[0-9]$/.test(ch);
+
+            const variants = new Set();
+            variants.add(cleanNumber); // оригинал
+
+            const len = cleanNumber.length;
+
+            // Выделим p1 (первые 5) и p2 (следующие 3) только если длина >=8
+            if (len >= 8) {
+                const p1 = cleanNumber.slice(0, 5);
+                const p2 = cleanNumber.slice(5, 8);
+                const rest = cleanNumber.slice(8); // может быть пустой строкой
+
+                // Всегда добавляем классические варианты:
+                // 1) p1 p2 rest  (с пробелом после первых 5)
+                // 2) p1p2 rest   (без пробела между p1 и p2, но пробел перед остатком) — обязательно для твоих примеров
+                if (rest.length > 0) {
+                    variants.add(`${p1} ${p2} ${rest}`);
+                    variants.add(`${p1}${p2} ${rest}`);
+                } else {
+                    // если rest пустой — просто разные формы без остатка
+                    variants.add(`${p1} ${p2}`);
+                    variants.add(`${p1}${p2}`);
+                }
+
+                // Дополнительные полезные разделения:
+                // если rest начинается с цифры -> выделим ведущую цифро-часть и суффикс
+                if (rest.length > 0 && isDigit(rest[0])) {
+                    let j = 0;
+                    while (j < rest.length && isDigit(rest[j])) j++;
+                    const numPart = rest.slice(0, j);      // последовательность цифр
+                    const suffix = rest.slice(j);          // оставшиеся буквы/символы, возможно пусто
+
+                    // p1p2 num+suffix
+                    variants.add(`${p1}${p2} ${numPart}${suffix}`);
+                    // p1 p2 num suffix (если есть суффикс)
+                    if (suffix) variants.add(`${p1} ${p2} ${numPart} ${suffix}`);
+                    // p1p2num suffix
+                    if (suffix) variants.add(`${p1}${p2}${numPart} ${suffix}`);
+                }
+
+                // если rest начинается с буквы -> попробуем найти буквы+цифры+буквы (например A01ZZ)
+                if (rest.length > 0 && isLetter(rest[0])) {
+                    // найдем первый индекс цифры внутри rest
+                    let k = 0;
+                    while (k < rest.length && isLetter(rest[k])) k++;
+                    const alphaPrefix = rest.slice(0, k);      // буквы в начале (возможно несколько)
+                    let m = k;
+                    while (m < rest.length && isDigit(rest[m])) m++;
+                    const numMid = rest.slice(k, m);           // цифры после букв (возможно пусто)
+                    const alphaSuffix = rest.slice(m);         // оставшиеся буквы (возможно пусто)
+
+                    // всегда включим p1p2 rest (уже добавили выше), но добавим вид с разделением внутри rest если есть числовая часть
+                    if (numMid) {
+                        // p1p2 alpha+num+suffix  (это часто совпадает с p1p2 rest, но добавим на всякий)
+                        variants.add(`${p1}${p2} ${alphaPrefix}${numMid}${alphaSuffix}`);
+                        // p1 p2 alpha+num+suffix
+                        variants.add(`${p1} ${p2} ${alphaPrefix}${numMid}${alphaSuffix}`);
+                        // p1 p2 alpha num suffix (разделяем alpha и num) — иногда полезно
+                        variants.add(`${p1} ${p2} ${alphaPrefix} ${numMid}${alphaSuffix}`);
+                        // p1p2 alpha num suffix
+                        variants.add(`${p1}${p2} ${alphaPrefix} ${numMid}${alphaSuffix}`);
+                    } else {
+                        // если внутри rest нет цифр — просто разные огранки
+                        variants.add(`${p1} ${p2} ${rest}`);
+                        variants.add(`${p1}${p2} ${rest}`);
                     }
+                }
 
-                    if (digitStart > 0 && digitStart < numberWithoutDashes.length) {
-                        const prefix = numberWithoutDashes.slice(0, digitStart);
-                        const digits = numberWithoutDashes.slice(digitStart);
-
-                        if (digits.length === 5) {
-                            return `${numberWithoutDashes} / ${prefix} ${digits}`;
-                        }
-                        if (digits.length === 7) {
-                            return `${numberWithoutDashes} / ${prefix} ${digits.slice(0, 5)} ${digits.slice(5)}`;
-                        }
-                        if (digits.length === 8) {
-                            return `${numberWithoutDashes} / ${prefix} ${digits.slice(0, 5)} ${digits.slice(5)}`;
-                        }
+                // При длинных кодах (12-16) можно добавить вариант с пробелом после 5 и без пробела между 5 и 3:
+                if (len === 10 || len === 11) {
+                    // для 10-11 : старая классика p1 p2 p3 где p3 = оставшиеся от 8 до конца (2-3 символа)
+                    const p3 = cleanNumber.slice(8);
+                    if (p3) {
+                        variants.add(`${p1} ${p2} ${p3}`);
+                        variants.add(`${p1}${p2} ${p3}`);
                     }
                 }
             }
 
-            // Универсальный формат для номеров с дефисами
-            if (number.includes('-')) {
-                const parts = number.split('-');
-                const cleanNumber = parts.join('');
-
-                if (parts.length === 2) {
-                    return `${cleanNumber} / ${parts[0]} ${parts[1]}`;
-                }
-                if (parts.length === 3) {
-                    return `${cleanNumber} / ${parts[0]}${parts[1]} ${parts[2]} / ${parts[0]} ${parts[1]} ${parts[2]}`;
-                }
-                if (parts.length === 4) {
-                    return `${cleanNumber} / ${parts[0]}${parts[1]}${parts[2]} ${parts[3]} / ${parts.join(' ')}`;
-                }
-            }
-
-            return "Unsupported format.";
+            // Вернём строку вариантов, отсортируем для стабильности
+            const out = Array.from(variants);
+            // Уберём пустые и одинаковые
+            const filtered = out.filter(v => v && v.length > 0);
+            return filtered.join(" / ");
         }
         function processCode() {
             const input = document.getElementById('code').value.trim().toUpperCase();
@@ -1594,6 +1831,9 @@
             if (result !== "Unsupported format.") {
                 const parts = result.split(' / ');
 
+                // Убираем дефисы из всех вариантов
+                const cleanedParts = parts.map(part => part.replace(/-/g, ' ').trim());
+
                 // --- Блок с оригиналом ---
                 const originalGroup = document.createElement('div');
                 originalGroup.classList.add('result-group');
@@ -1603,14 +1843,15 @@
                 originalTitle.textContent = "🔑 Оригінал";
                 originalGroup.appendChild(originalTitle);
 
-                const originalPart = createCopyablePart(input);
+                const originalClean = input.replace(/-/g, '');
+                const originalPart = createCopyablePart(originalClean);
                 originalPart.classList.add('original');
                 originalGroup.appendChild(originalPart);
 
                 resultContainer.appendChild(originalGroup);
 
                 // --- Остальные варианты ---
-                parts.forEach((part, idx) => {
+                cleanedParts.forEach((part, idx) => {
                     const group = document.createElement('div');
                     group.classList.add('result-group', 'inline');
 
@@ -1637,6 +1878,7 @@
             resultsDiv.classList.add('show');
             resultsDiv.appendChild(resultContainer);
         }
+
 
         // Создание копируемого элемента
         function createCopyablePart(text) {
