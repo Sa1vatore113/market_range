@@ -1004,121 +1004,6 @@
             resultBox.classList.add('show');
 
         }
-
-        function processCode() {
-            const input = document.getElementById('code').value.trim().toUpperCase();
-            const selectedBrand = document.getElementById('brand').value.toLowerCase();
-            const resultsDiv = document.getElementById('splitter-results');
-            resultsDiv.innerHTML = '';
-
-            // Валидация ввода
-            if (input === '') {
-                resultsDiv.innerHTML = '<p class="text-red-400">Введіть код деталі</p>';
-                return;
-            }
-
-            if (!/^[A-Z0-9-\s]+$/i.test(input)) {
-                resultsDiv.innerHTML = '<p class="text-red-400">Невірний формат. Дозволені лише літери, цифри та дефіси</p>';
-                return;
-            }
-
-            let result = "Unsupported format.";
-
-            // Карта брендов
-            const brandMap = {
-                'alfa': processMoparNumber,
-                'jeep': processMoparNumber,
-                'dodge': processMoparNumber,
-                'ram': processMoparNumber,
-                'chrysler': processMoparNumber,
-                'toyota': processToyotaOrSubaruNumber,
-                'subaru': processToyotaOrSubaruNumber,
-                'hyundai': processHyundaiKiaGenesisNumber,
-                'kia': processHyundaiKiaGenesisNumber,
-                'genesis': processHyundaiKiaGenesisNumber,
-                'lexus': processToyotaOrSubaruNumber,
-                'scion': processToyotaOrSubaruNumber,
-                'maserati': processMaseratiNumber,
-                'nissan': processNissanNumber,
-                'infiniti': processNissanNumber,
-                'mazda': processMazdaNumber,
-                'mitsubishi': processMitsubishiNumber,
-                'tesla': processTeslaNumber,
-                'volkswagen': processVagNumber,
-                'audi': processVagNumber,
-                'porsche': processVagNumber,
-                'mercedes': processMercedesNumber,
-                'bmw': processBmwNumber,
-                'mini': processBmwNumber,
-                'ford': processFordNumber,
-                'lincoln': processFordNumber,
-                'chevrolet': processFordNumber,
-                'gmc': processFordNumber,
-                'cadillac': processFordNumber,
-                'buick': processFordNumber,
-                'land rover': processLandRoverNumber,
-                'jaguar': processLandRoverNumber,
-                'honda': processHondaNumber,
-                'acura': processHondaNumber
-            };
-
-            // Поиск функции по бренду
-            for (const [brandKey, processor] of Object.entries(brandMap)) {
-                if (selectedBrand.includes(brandKey)) {
-                    result = processor(input);
-                    break;
-                }
-            }
-
-            // Отображение результата
-            if (selectedBrand.includes('mercedes') && result.includes('|')) {
-                // спец. логика для Mercedes
-                const resultContainer = document.createElement('div');
-                resultContainer.classList.add('result-item');
-                resultContainer.style.display = 'flex';
-                resultContainer.style.flexWrap = 'wrap';
-                resultContainer.style.gap = '8px';
-
-                const resultParts = result.split('|').map(r => r.trim());
-
-                resultParts.forEach(res => {
-                    const partWrapper = document.createElement('div');
-                    partWrapper.classList.add('result-item-hover');
-                    partWrapper.style.cursor = 'pointer';
-                    partWrapper.style.padding = '4px 8px';
-                    partWrapper.style.border = '1px solid #ddd';
-                    partWrapper.style.borderRadius = '6px';
-
-                    partWrapper.onclick = () => navigator.clipboard.writeText(res);
-
-                    const resultText = document.createElement('span');
-                    resultText.textContent = res;
-
-                    partWrapper.appendChild(resultText);
-                    resultContainer.appendChild(partWrapper);
-                });
-
-                resultsDiv.classList.add('show');
-                resultsDiv.appendChild(resultContainer);
-
-            } else {
-                // универсальный вывод для всех остальных
-                const resultItem = document.createElement('div');
-                resultItem.classList.add('result-item');
-                resultItem.textContent = result;
-
-                if (result !== "Unsupported format.") {
-                    resultItem.style.cursor = 'pointer';
-                    resultItem.onclick = () => navigator.clipboard.writeText(result);
-                } else {
-                    resultItem.classList.add('result-disabled');
-                }
-
-                resultsDiv.classList.add('show');
-                resultsDiv.appendChild(resultItem);
-            }
-        }
-
         // =================== ФУНКЦИИ РАЗДЕЛЕНИЯ ===================
         function processMoparNumber(number) {
             // Очищаємо від пробілів і дефісів, приводимо до верхнього регістру
@@ -1582,47 +1467,51 @@
         }
 
         function processFordNumber(number) {
-            // Сначала удаляем все дефисы
-            const cleanNumber = number.replace(/-/g, '');
+            if (!number && number !== "") return "";
 
-            if (cleanNumber.includes('-')) {
-                const parts = cleanNumber.split('-');
-                if (parts.length === 3) {
-                    return `${cleanNumber} / ${parts[0]}${parts[1]} ${parts[2]} / ${parts[0]} ${parts[1]} ${parts[2]}`;
+            const cleanNumber = String(number).replace(/[-\s]/g, '').toUpperCase();
+            const variants = new Set();
+
+            // всегда оригинал первым
+            variants.add(cleanNumber);
+
+            if (cleanNumber.length < 5) {
+                // слишком коротко — ничего не делаем
+                return Array.from(variants).join(' / ');
+            }
+
+            const prefix = cleanNumber.slice(0, 4);
+            const rest = cleanNumber.slice(4);
+
+            // Ищем все конечные буквы (1 и более) — это суффикс
+            const letterSuffixMatch = rest.match(/([A-Z]+)$/);
+            let suffix = "";
+            let middle = rest;
+
+            if (letterSuffixMatch) {
+                suffix = letterSuffixMatch[1];
+                middle = rest.slice(0, rest.length - suffix.length);
+            }
+
+            // Если middle пустой — нет смысла добавлять варианты со "серединой"
+            if (middle.length > 0) {
+                // prefix + ' ' + middle+suffix
+                variants.add(`${prefix} ${middle}${suffix}`);
+
+                if (suffix) {
+                    // prefix+middle + ' ' + suffix
+                    variants.add(`${prefix}${middle} ${suffix}`);
+                    // prefix + ' ' + middle + ' ' + suffix
+                    variants.add(`${prefix} ${middle} ${suffix}`);
                 }
-                return `${cleanNumber} / ${parts.join(' ')}`;
-            }
-
-            if (cleanNumber.length < 5) return "Unsupported format.";
-
-            const isLetter = ch => /^[A-Z]$/i.test(ch);
-
-            if (isLetter(cleanNumber.at(-1))) {
-                let i = cleanNumber.length - 1;
-                while (i >= 0 && isLetter(cleanNumber[i])) i--;
-                const suffix = cleanNumber.slice(i + 1);
-                const mainPart = cleanNumber.slice(0, cleanNumber.length - suffix.length);
-
-                let digitStart = 0;
-                while (digitStart < mainPart.length && isLetter(mainPart[digitStart])) digitStart++;
-
-                const prefix = mainPart.slice(0, digitStart);
-                const digits = mainPart.slice(digitStart);
-
-                return `${cleanNumber} / ${mainPart} ${suffix} / ${prefix} ${digits} ${suffix}`;
             } else {
-                let digitStart = 0;
-                while (digitStart < cleanNumber.length && isLetter(cleanNumber[digitStart])) digitStart++;
-
-                const prefix = cleanNumber.slice(0, digitStart);
-                const digits = cleanNumber.slice(digitStart);
-
-                return `${cleanNumber} / ${prefix} ${digits}`;
+                // Если middle пуст (весь rest — только суффикс), всё равно можно показать:
+                // prefix + ' ' + suffix  (например, "ABCD EFG")
+                if (suffix) variants.add(`${prefix} ${suffix}`);
             }
+
+            return Array.from(variants).join(' / ');
         }
-
-
-
         function processLandRoverNumber(number) {
             const cleanNumber = number.replace(/[-\s]/g, '').toUpperCase();
 
@@ -1902,46 +1791,6 @@
 
             return partWrapper;
         }
-
-        // Обновленная функция для Ford
-        function processFordNumber(number) {
-            if (number.includes('-')) {
-                const clean = number.replace(/-/g, '');
-                const parts = number.split('-');
-                if (parts.length === 3) {
-                    return `${clean} / ${parts[0]}${parts[1]} ${parts[2]} / ${parts[0]} ${parts[1]} ${parts[2]}`;
-                }
-                return `${clean} / ${parts.join(' ')}`;
-            }
-
-            if (number.length < 5) return "Unsupported format.";
-
-            const isLetter = ch => /^[A-Z]$/i.test(ch);
-
-            if (isLetter(number.at(-1))) {
-                let i = number.length - 1;
-                while (i >= 0 && isLetter(number[i])) i--;
-                const suffix = number.slice(i + 1);
-                const mainPart = number.slice(0, number.length - suffix.length);
-
-                let digitStart = 0;
-                while (digitStart < mainPart.length && isLetter(mainPart[digitStart])) digitStart++;
-
-                const prefix = mainPart.slice(0, digitStart);
-                const digits = mainPart.slice(digitStart);
-
-                return `${number} / ${mainPart} ${suffix} / ${prefix} ${digits} ${suffix}`;
-            } else {
-                let digitStart = 0;
-                while (digitStart < number.length && isLetter(number[digitStart])) digitStart++;
-
-                const prefix = number.slice(0, digitStart);
-                const digits = number.slice(digitStart);
-
-                return `${number} / ${prefix} ${digits}`;
-            }
-        }
-
     </script>
 </body>
 </html>
