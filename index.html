@@ -293,6 +293,70 @@
             flex-direction: column;
             gap: 20px;
         }
+        /* Контейнер результатов */
+        .result-container {
+            max-width: 100%;
+            overflow-x: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 1rem;
+        }
+
+        /* Группа кодов (теперь в строку) */
+        .result-group {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* Заголовок группы */
+        .result-group-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin: 0; /* убрали margin-bottom */
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Обычная плашка */
+        .copyable-part {
+            display: inline-flex; /* компактные блоки в одну строку */
+            align-items: center;
+            justify-content: center;
+            padding: 6px 12px; /* отступы */
+            margin: 2px 0; /* лёгкое расстояние по вертикали */
+            border: 1px solid rgba(189,189,189,0.3);
+            border-radius: 8px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-weight: 500;
+            font-size: 0.9rem;
+            white-space: nowrap; /* не переносим текст внутри */
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+            /* Hover-эффект */
+            .copyable-part:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                border-color: var(--accent-color);
+            }
+
+            /* Оригинальный код выделяем */
+            .copyable-part.original {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: #fff;
+                font-weight: 600;
+                border: none;
+            }
+
+
     </style>
 </head>
 <body>
@@ -469,9 +533,9 @@
         // Рассчёт с пробегом
         function calculateWithMileage() {
             const minPrice = parseFloat(document.getElementById('minPriceMileage').value); // дешева
-            const maxMileage = parseFloat(document.getElementById('maxMileage').value);   // дешева (максимальный пробег)
+            const maxMileage = (parseFloat(document.getElementById('maxMileage').value) || 0) * 1000;   // дешева (максимальный пробег)
             const maxPrice = parseFloat(document.getElementById('maxPriceMileage').value); // дорога
-            const minMileage = parseFloat(document.getElementById('minMileage').value);   // дорога (минимальный пробег)
+            const minMileage = (parseFloat(document.getElementById('minMileage').value) || 0) * 1000;   // дорога (минимальный пробег)
 
             const resultsDiv = document.getElementById('resultsMileage');
             resultsDiv.innerHTML = "";
@@ -496,8 +560,8 @@
             const a = maxPrice - b * minMileage;
 
             const mileages = [...document.querySelectorAll('.partMileage')]
-                .map(inp => parseFloat(inp.value))
-                .filter(m => !isNaN(m));
+                .map(inp => (parseFloat(inp.value) || 0) * 1000)  // теперь значения в "тыс."
+                .filter(m => !isNaN(m) && m > 0);
 
             if (mileages.length === 0) {
                 resultsDiv.innerHTML = "<p class='text-red-400'>Додайте хоча б одну деталь</p>";
@@ -1457,6 +1521,183 @@
 
             return "Unsupported format.";
         }
+        function processCode() {
+            const input = document.getElementById('code').value.trim().toUpperCase();
+            const selectedBrand = document.getElementById('brand').value.toLowerCase();
+            const resultsDiv = document.getElementById('splitter-results');
+            resultsDiv.innerHTML = '';
+
+            // Валидация ввода
+            if (input === '') {
+                resultsDiv.innerHTML = '<p class="text-red-400">Введіть код деталі</p>';
+                return;
+            }
+            if (!/^[A-Z0-9-\s]+$/i.test(input)) {
+                resultsDiv.innerHTML = '<p class="text-red-400">Невірний формат. Дозволені лише літери, цифри та дефіси</p>';
+                return;
+            }
+
+            let result = "Unsupported format.";
+
+            // Карта брендов
+            const brandMap = {
+                'alfa': processMoparNumber,
+                'jeep': processMoparNumber,
+                'dodge': processMoparNumber,
+                'ram': processMoparNumber,
+                'chrysler': processMoparNumber,
+                'toyota': processToyotaOrSubaruNumber,
+                'subaru': processToyotaOrSubaruNumber,
+                'hyundai': processHyundaiKiaGenesisNumber,
+                'kia': processHyundaiKiaGenesisNumber,
+                'genesis': processHyundaiKiaGenesisNumber,
+                'lexus': processToyotaOrSubaruNumber,
+                'scion': processToyotaOrSubaruNumber,
+                'maserati': processMaseratiNumber,
+                'nissan': processNissanNumber,
+                'infiniti': processNissanNumber,
+                'mazda': processMazdaNumber,
+                'mitsubishi': processMitsubishiNumber,
+                'tesla': processTeslaNumber,
+                'volkswagen': processVagNumber,
+                'audi': processVagNumber,
+                'porsche': processVagNumber,
+                'mercedes': processMercedesNumber,
+                'bmw': processBmwNumber,
+                'mini': processBmwNumber,
+                'ford': processFordNumber,
+                'lincoln': processFordNumber,
+                'chevrolet': processFordNumber,
+                'gmc': processFordNumber,
+                'cadillac': processFordNumber,
+                'buick': processFordNumber,
+                'land rover': processLandRoverNumber,
+                'jaguar': processLandRoverNumber,
+                'honda': processHondaNumber,
+                'acura': processHondaNumber
+            };
+
+            // Определяем процессор по бренду
+            for (const [brandKey, processor] of Object.entries(brandMap)) {
+                if (selectedBrand.includes(brandKey)) {
+                    result = processor(input);
+                    break;
+                }
+            }
+
+            // Создаем контейнер
+            const resultContainer = document.createElement('div');
+            resultContainer.classList.add('result-container');
+
+            if (result !== "Unsupported format.") {
+                const parts = result.split(' / ');
+
+                // --- Блок с оригиналом ---
+                const originalGroup = document.createElement('div');
+                originalGroup.classList.add('result-group');
+
+                const originalTitle = document.createElement('div');
+                originalTitle.classList.add('result-group-title');
+                originalTitle.textContent = "🔑 Оригінал";
+                originalGroup.appendChild(originalTitle);
+
+                const originalPart = createCopyablePart(input);
+                originalPart.classList.add('original');
+                originalGroup.appendChild(originalPart);
+
+                resultContainer.appendChild(originalGroup);
+
+                // --- Остальные варианты ---
+                parts.forEach((part, idx) => {
+                    const group = document.createElement('div');
+                    group.classList.add('result-group', 'inline');
+
+                    const title = document.createElement('div');
+                    title.classList.add('result-group-title');
+                    title.textContent = `Варіант ${idx + 1}:`;
+                    group.appendChild(title);
+
+                    const subParts = part.split(' ').filter(sp => sp.trim() !== '');
+                    subParts.forEach(subPart => {
+                        const copyablePart = createCopyablePart(subPart.trim());
+                        group.appendChild(copyablePart);
+                    });
+
+                    resultContainer.appendChild(group);
+                });
+            } else {
+                const errorPart = document.createElement('div');
+                errorPart.textContent = result;
+                errorPart.classList.add('text-red-400');
+                resultContainer.appendChild(errorPart);
+            }
+
+            resultsDiv.classList.add('show');
+            resultsDiv.appendChild(resultContainer);
+        }
+
+        // Создание копируемого элемента
+        function createCopyablePart(text) {
+            const partWrapper = document.createElement('div');
+            partWrapper.classList.add('copyable-part');
+
+            partWrapper.onclick = () => {
+                navigator.clipboard.writeText(text);
+                partWrapper.style.backgroundColor = 'var(--accent-color)';
+                partWrapper.style.color = 'var(--btn-text-color)';
+                setTimeout(() => {
+                    partWrapper.style.backgroundColor = 'var(--input-bg)';
+                    partWrapper.style.color = 'var(--text-color)';
+                }, 200);
+            };
+
+            const textElement = document.createElement('span');
+            textElement.textContent = text;
+            textElement.style.fontWeight = '500';
+            partWrapper.appendChild(textElement);
+
+            return partWrapper;
+        }
+
+        // Обновленная функция для Ford
+        function processFordNumber(number) {
+            if (number.includes('-')) {
+                const clean = number.replace(/-/g, '');
+                const parts = number.split('-');
+                if (parts.length === 3) {
+                    return `${clean} / ${parts[0]}${parts[1]} ${parts[2]} / ${parts[0]} ${parts[1]} ${parts[2]}`;
+                }
+                return `${clean} / ${parts.join(' ')}`;
+            }
+
+            if (number.length < 5) return "Unsupported format.";
+
+            const isLetter = ch => /^[A-Z]$/i.test(ch);
+
+            if (isLetter(number.at(-1))) {
+                let i = number.length - 1;
+                while (i >= 0 && isLetter(number[i])) i--;
+                const suffix = number.slice(i + 1);
+                const mainPart = number.slice(0, number.length - suffix.length);
+
+                let digitStart = 0;
+                while (digitStart < mainPart.length && isLetter(mainPart[digitStart])) digitStart++;
+
+                const prefix = mainPart.slice(0, digitStart);
+                const digits = mainPart.slice(digitStart);
+
+                return `${number} / ${mainPart} ${suffix} / ${prefix} ${digits} ${suffix}`;
+            } else {
+                let digitStart = 0;
+                while (digitStart < number.length && isLetter(number[digitStart])) digitStart++;
+
+                const prefix = number.slice(0, digitStart);
+                const digits = number.slice(digitStart);
+
+                return `${number} / ${prefix} ${digits}`;
+            }
+        }
+
     </script>
 </body>
 </html>
