@@ -532,15 +532,15 @@
 
         // Рассчёт с пробегом
         function calculateWithMileage() {
-            const minPrice = parseFloat(document.getElementById('minPriceMileage').value); // дешева
-            const maxMileage = (parseFloat(document.getElementById('maxMileage').value) || 0) * 1000;   // дешева (максимальный пробег)
-            const maxPrice = parseFloat(document.getElementById('maxPriceMileage').value); // дорога
-            const minMileage = (parseFloat(document.getElementById('minMileage').value) || 0) * 1000;   // дорога (минимальный пробег)
+            const minPrice = parseFloat(document.getElementById('minPriceMileage').value); // нижняя граница (50%)
+            const maxPrice = parseFloat(document.getElementById('maxPriceMileage').value); // верхняя граница (80%)
+            const maxMileage = (parseFloat(document.getElementById('maxMileage').value) || 0) * 1000;
+            const minMileage = (parseFloat(document.getElementById('minMileage').value) || 0) * 1000;
 
             const resultsDiv = document.getElementById('resultsMileage');
             resultsDiv.innerHTML = "";
 
-            if (isNaN(minPrice) || isNaN(maxMileage) || isNaN(maxPrice) || isNaN(minMileage)) {
+            if (isNaN(minPrice) || isNaN(maxPrice) || isNaN(minMileage) || isNaN(maxMileage)) {
                 resultsDiv.innerHTML = "<p class='text-red-400'>Заповніть усі ринкові межі</p>";
                 return;
             }
@@ -555,21 +555,17 @@
             }
 
             // Строим формулу через 2 точки: (minMileage, maxPrice) и (maxMileage, minPrice)
-            // y = a + b*x
             const b = (maxPrice - minPrice) / (minMileage - maxMileage);
             const a = maxPrice - b * minMileage;
 
             const mileages = [...document.querySelectorAll('.partMileage')]
-                .map(inp => (parseFloat(inp.value) || 0) * 1000)  // теперь значения в "тыс."
+                .map(inp => (parseFloat(inp.value) || 0) * 1000)
                 .filter(m => !isNaN(m) && m > 0);
 
             if (mileages.length === 0) {
                 resultsDiv.innerHTML = "<p class='text-red-400'>Додайте хоча б одну деталь</p>";
                 return;
             }
-
-            // 50% рынка = (Максимальная цена - минимальная) * 0.5 + минимальная цена
-            const market50Percent = (maxPrice - minPrice) * 0.5 + minPrice;
 
             const tableContainer = document.createElement('div');
             tableContainer.classList.add('result-table-container');
@@ -581,28 +577,25 @@
             const table = document.createElement('table');
             table.classList.add('result-table');
             table.innerHTML = `
-        <thead>
-            <tr>
-                <th>Деталь</th>
-                <th>Пробіг</th>
-                <th class="number-cell">Ціна</th>
-                <th class="number-cell">50% ринку</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>`;
+<thead>
+    <tr>
+        <th>Деталь</th>
+        <th>Пробіг</th>
+        <th class="number-cell">Ціна</th>
+    </tr>
+</thead>
+<tbody>
+</tbody>`;
 
+            const tbody = table.querySelector('tbody');
             mileages.forEach((m, idx) => {
                 const fairPrice = a + b * m;
-
-                const tbody = table.querySelector('tbody');
                 tbody.innerHTML += `
-            <tr>
-                <td><strong>Деталь ${idx + 1}</strong></td>
-                <td>${m.toLocaleString()} миль</td>
-                <td class="number-cell"><strong>$${fairPrice.toFixed(2)}</strong></td>
-                <td class="number-cell">$${market50Percent.toFixed(2)}</td>
-            </tr>`;
+        <tr>
+            <td><strong>Деталь ${idx + 1}</strong></td>
+            <td>${m.toLocaleString()} миль</td>
+            <td class="number-cell"><strong>$${fairPrice.toFixed(2)}</strong></td>
+        </tr>`;
             });
 
             tableContainer.appendChild(tableHeader);
@@ -610,6 +603,7 @@
             resultsDiv.appendChild(tableContainer);
             resultsDiv.classList.add('show');
         }
+
         // Data for the new car info feature
         const carData = {
             "Acura": {
@@ -968,16 +962,20 @@
             tableHeader.textContent = 'Результати розрахунків';
 
             let tableHTML = `
-        <table class="result-table">
-            <thead>
-                <tr>
-                    <th>%</th>
-                    <th class="number-cell">Разом</th>
-                    <th class="number-cell">Базова</th>
-                    <th>Знижка 20-25%</th>
-                </tr>
-            </thead>
-            <tbody>`;
+<table class="result-table">
+    <thead>
+        <tr>
+            <th>%</th>
+            <th class="number-cell">Разом</th>
+            <th class="number-cell">Базова</th>
+            <th>Знижка 20-25%</th>
+        </tr>
+    </thead>
+    <tbody>`;
+
+            // для сохранения диапазона (50% и 80%)
+            let savedMin = null;
+            let savedMax = null;
 
             for (let p = 50; p <= 80; p += 10) {
                 const baseValue = min + (max - min) * (p / 100);
@@ -986,24 +984,41 @@
                 const discounted20 = ((valueWithCents - shipping) * 0.80 + shipping).toFixed(2);
                 const discounted25 = ((valueWithCents - shipping) * 0.75 + shipping).toFixed(2);
 
+                if (p === 50) savedMin = valueWithCents;
+                if (p === 80) savedMax = valueWithCents;
+
                 tableHTML += `
-            <tr>
-                <td class="compact-cell"><strong>${p}%</strong></td>
-                <td class="number-cell">$${valueWithCents.toFixed(2)}</td>
-                <td class="number-cell"><strong>$${finalValue}</strong></td>
-                <td class="compact-cell">$${discounted25} – $${discounted20}</td>
-            </tr>`;
+    <tr>
+        <td class="compact-cell"><strong>${p}%</strong></td>
+        <td class="number-cell">$${valueWithCents.toFixed(2)}</td>
+        <td class="number-cell"><strong>$${finalValue}</strong></td>
+        <td class="compact-cell">$${discounted25} – $${discounted20}</td>
+    </tr>`;
             }
 
             tableHTML += `</tbody></table>`;
 
             resultBox.innerHTML = "";
-
-            tableContainer.innerHTML = tableHTML;  // сразу формируем таблицу
+            tableContainer.innerHTML = tableHTML;
             resultBox.appendChild(tableContainer);
             resultBox.classList.add('show');
 
+            // Сохраняем диапазон для калькулятора дорогих деталей
+            if (savedMin !== null && savedMax !== null) {
+                window.range50_80 = { min: savedMin, max: savedMax };
+            }
         }
+        document.getElementById('toggleMileageCalc').addEventListener('click', () => {
+            const calcCard = document.querySelector('.calc-card');
+            calcCard.classList.add('flipped');
+
+            if (window.range50_80) {
+                document.getElementById('minPriceMileage').value = window.range50_80.min.toFixed(2);
+                document.getElementById('maxPriceMileage').value = window.range50_80.max.toFixed(2);
+            }
+        });
+
+
         // =================== ФУНКЦИИ РАЗДЕЛЕНИЯ ===================
         function processMoparNumber(number) {
             // Очищаємо від пробілів і дефісів, приводимо до верхнього регістру
