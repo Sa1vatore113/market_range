@@ -980,12 +980,12 @@
             for (let p = 50; p <= 80; p += 10) {
                 const baseValue = min + (max - min) * (p / 100);
                 const valueWithCents = parseFloat((Math.floor(baseValue) + centsIndex / 100).toFixed(2));
-                const finalValue = (valueWithCents - shipping).toFixed(2);
+                const finalValue = (valueWithCents - shipping).toFixed(2); // ← Базова
                 const discounted20 = ((valueWithCents - shipping) * 0.80 + shipping).toFixed(2);
                 const discounted25 = ((valueWithCents - shipping) * 0.75 + shipping).toFixed(2);
 
-                if (p === 50) savedMin = valueWithCents;
-                if (p === 80) savedMax = valueWithCents;
+                if (p === 50) savedMin = parseFloat(finalValue);
+                if (p === 80) savedMax = parseFloat(finalValue);
 
                 tableHTML += `
     <tr>
