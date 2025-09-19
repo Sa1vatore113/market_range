@@ -1818,10 +1818,14 @@
             const base = Math.floor(value);
             const lastDigit = base % 10;
 
+            // Если уже заканчивается на 9 - оставляем как есть
+            if (lastDigit === 9) {
+                return base + centsIndex / 100;
+            }
+
             let rounded;
 
             if (lastDigit === 0) {
-                // 10, 20, 30 → к 9
                 rounded = base - 1;
             } else if (lastDigit <= 2) {
                 rounded = base - lastDigit + 4;
@@ -1829,11 +1833,9 @@
                 rounded = base - lastDigit + 4;
             } else if (lastDigit <= 8) {
                 rounded = base - lastDigit + 9;
-            } else {
-                rounded = base - lastDigit + 9 + 10;
             }
 
-            return rounded + centsIndex / 100; // вместо фиксированного .72
+            return rounded + centsIndex / 100;
         }
     </script>
 </body>
