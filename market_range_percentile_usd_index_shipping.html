@@ -464,6 +464,13 @@
                     </select>
                     <input type="text" id="code" placeholder="Введіть код деталі" class="input-field">
                     <button onclick="processCode()" class="btn">Розбити код</button>
+                    <div class="flex items-center justify-between pt-2">
+                        <label for="enableAutoPaste" class="text-base font-medium whitespace-nowrap">Автовставка з буфера</label>
+                        <label class="relative inline-flex items-center cursor-pointer ml-4">
+                            <input type="checkbox" id="enableAutoPaste" value="" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-600 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
                 </div>
                 <div id="splitter-results" class="result-box"></div>
             </div>
@@ -1837,6 +1844,61 @@
 
             return rounded + centsIndex / 100;
         }
+        const codeInput = document.getElementById("code");
+        const autoPasteToggle = document.getElementById("enableAutoPaste");
+        const AUTO_PASTE_KEY = 'autoPasteEnabled';
+
+        // 1. Ініціалізація: Відновлення стану перемикача з LocalStorage
+        function initAutoPasteToggle() {
+            const isEnabled = localStorage.getItem(AUTO_PASTE_KEY) === 'true';
+            if (autoPasteToggle) {
+                autoPasteToggle.checked = isEnabled;
+            }
+        }
+        initAutoPasteToggle();
+
+        // 2. Збереження стану при зміні
+        if (autoPasteToggle) {
+            autoPasteToggle.addEventListener('change', () => {
+                localStorage.setItem(AUTO_PASTE_KEY, autoPasteToggle.checked);
+            });
+        }
+
+        // 3. Логіка автовставки: повертаємось на 'click' для кращої сумісності з API дозволів
+        codeInput.addEventListener("click", async (event) => {
+            // Перевіряємо, чи ввімкнена функція автовставки
+            if (autoPasteToggle && autoPasteToggle.checked) {
+                // Запобігаємо стандартній дії (якщо це можливо)
+                event.preventDefault();
+
+                try {
+                    // Запит на читання буфера обміну
+                    const text = await navigator.clipboard.readText();
+
+                    if (text && text.trim().length > 0) {
+                        // Вставка та ГАРАНТОВАНА ЗАМІНА (як ви просили)
+                        codeInput.value = text.trim();
+                        // Можемо також зняти фокус або викликати подію input
+                        codeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                } catch (err) {
+                    console.warn("Clipboard read failed (requires user gesture or permission):", err);
+
+                    // Інформація про помилку, якщо дозвіл відсутній.
+                    if (err.name === 'NotAllowedError') {
+                        const existingError = document.getElementById('paste-error-message');
+                        if (existingError) existingError.remove();
+
+                        const tempDiv = document.createElement('div');
+                        tempDiv.id = 'paste-error-message';
+                        tempDiv.className = 'text-sm text-red-500 mt-2 p-2 bg-red-100/10 rounded-md';
+                        tempDiv.textContent = '⛔ Браузер блокує автовставку. Клацніть знову або вимкніть функцію. Дозвіл потрібен на кожну дію.';
+                        codeInput.closest('.space-y-6').appendChild(tempDiv);
+                        setTimeout(() => tempDiv.remove(), 7000);
+                    }
+                }
+            }
+        });
     </script>
 </body>
 </html>
