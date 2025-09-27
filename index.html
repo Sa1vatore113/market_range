@@ -275,6 +275,7 @@
                 box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
                 background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
             }
+
         .left-panel {
             flex: 1.5; /* Увеличиваем ширину левой панели */
             display: flex;
@@ -355,11 +356,158 @@
                 font-weight: 600;
                 border: none;
             }
+        .burger-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
 
+        .burger-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
 
+            .burger-btn:hover {
+                transform: scale(1.1);
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+                border-color: var(--accent-color);
+            }
+
+        .burger-line {
+            width: 24px;
+            height: 2px;
+            background: var(--text-color);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border-radius: 2px;
+        }
+
+        .burger-btn.active .burger-line:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
+        }
+
+        .burger-btn.active .burger-line:nth-child(2) {
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        .burger-btn.active .burger-line:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
+        }
+
+        .burger-content {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            min-width: 220px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: none;
+            opacity: 0;
+            transform: translateY(-10px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border: 1px solid var(--input-border);
+        }
+
+            .burger-content.show {
+                display: block;
+                opacity: 1;
+                transform: translateY(10px) scale(1);
+                animation: menuSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            }
+
+        @keyframes menuSlideIn {
+            0% {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.9);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(10px) scale(1);
+            }
+        }
+
+        .burger-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            margin: 5px 0;
+            background: var(--input-bg);
+            border: 1px solid transparent;
+            font-weight: 500;
+        }
+
+            .burger-item:hover {
+                background: var(--accent-color);
+                color: var(--btn-text-color);
+                transform: translateX(-5px);
+                border-color: var(--accent-hover);
+                box-shadow: 0 4px 12px rgba(189, 189, 189, 0.2);
+            }
+
+        /* ===== Анимация перехода между страницами ===== */
+        .page-transition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.6s ease;
+        }
+
+            .page-transition.active {
+                opacity: 1;
+                pointer-events: all;
+            }
+
+        .main-container {
+            animation: pageFadeIn 0.8s ease-out;
+        }
+
+        @keyframes pageFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="burger-menu">
+        <div class="burger-btn" id="burgerBtn">
+            <div class="burger-line"></div>
+            <div class="burger-line"></div>
+            <div class="burger-line"></div>
+        </div>
+        <div class="burger-content" id="burgerContent">
+            <div class="burger-item" onclick="showMessage('main-site')">Повідомлення</div>
+            <div class="burger-item" onclick="navigateWithTransition('market_range_percentile_usd_index_shipping.html')">Інструменти для аналізу ринку</div>
+        </div>
+    </div>
     <div class="main-container">
         <!-- Лева панель: Калькулятор -->
         <div class="left-panel">
@@ -515,12 +663,12 @@
             const div = document.createElement('div');
             div.classList.add('part-item');
             div.innerHTML = `
-     <div class="flex items-center justify-between mb-2">
-            <label class="block mb-0">Деталь ${partCounter}: Пробіг (тис. миль)</label>
-            <button onclick="removePart(this)" class="text-red-400 hover:text-red-300 text-lg font-bold ml-2">×</button>
-        </div>
-        <input type="number" class="partMileage input-field">
-  `;
+                 <div class="flex items-center justify-between mb-2">
+                        <label class="block mb-0">Деталь ${partCounter}: Пробіг (тис. миль)</label>
+                        <button onclick="removePart(this)" class="text-red-400 hover:text-red-300 text-lg font-bold ml-2">×</button>
+                    </div>
+                    <input type="number" class="partMileage input-field">
+              `;
             partsList.appendChild(div);
         }
         function removePart(button) {
@@ -585,11 +733,11 @@
             table.classList.add('result-table');
             table.innerHTML = `
 <thead>
-    <tr>
-        <th>Деталь</th>
-        <th>Пробіг</th>
-        <th class="number-cell">Ціна</th>
-    </tr>
+                <tr>
+                    <th>Деталь</th>
+                    <th>Пробіг</th>
+                    <th class="number-cell">Ціна</th>
+                </tr>
 </thead>
 <tbody>
 </tbody>`;
@@ -600,11 +748,11 @@
                 const centsIndex = parseInt(document.getElementById("centsIndex").value) || 0;
                 const roundedPrice = roundTo49(fairPrice, centsIndex);
                 tbody.innerHTML += `
-    <tr>
-        <td><strong>Деталь ${idx + 1}</strong></td>
-        <td>${m.toLocaleString()} миль</td>
-        <td class="number-cell"><strong>$${roundedPrice}</strong></td>
-    </tr>`;
+                <tr>
+                    <td><strong>Деталь ${idx + 1}</strong></td>
+                    <td>${m.toLocaleString()} миль</td>
+                    <td class="number-cell"><strong>$${roundedPrice}</strong></td>
+                </tr>`;
             });
 
             tableContainer.appendChild(tableHeader);
@@ -976,15 +1124,15 @@
 
             let tableHTML = `
 <table class="result-table">
-    <thead>
-        <tr>
-            <th>%</th>
-            <th class="number-cell">Разом</th>
-            <th class="number-cell">Базова</th>
-            <th>Знижка 20-25%</th>
-        </tr>
-    </thead>
-    <tbody>`;
+                <thead>
+                    <tr>
+                        <th>%</th>
+                        <th class="number-cell">Разом</th>
+                        <th class="number-cell">Базова</th>
+                        <th>Знижка 20-25%</th>
+                    </tr>
+                </thead>
+                <tbody>`;
 
             // для сохранения диапазона (50% и 80%)
             let savedMin = null;
@@ -1001,12 +1149,12 @@
                 if (p === 80) savedMax = parseFloat(finalValue);
 
                 tableHTML += `
-    <tr>
-        <td class="compact-cell"><strong>${p}%</strong></td>
-        <td class="number-cell">$${valueWithCents.toFixed(2)}</td>
-        <td class="number-cell"><strong>$${finalValue}</strong></td>
-        <td class="compact-cell">$${discounted25} – $${discounted20}</td>
-    </tr>`;
+                <tr>
+                    <td class="compact-cell"><strong>${p}%</strong></td>
+                    <td class="number-cell">$${valueWithCents.toFixed(2)}</td>
+                    <td class="number-cell"><strong>$${finalValue}</strong></td>
+                    <td class="compact-cell">$${discounted25} – $${discounted20}</td>
+                </tr>`;
             }
 
             tableHTML += `</tbody></table>`;
@@ -1899,7 +2047,53 @@
                 }
             }
         });
+        // ===== Бургер-меню =====
+        document.getElementById('burgerBtn').addEventListener('click', function (e) {
+            e.stopPropagation();
+            const burgerContent = document.getElementById('burgerContent');
+            this.classList.toggle('active');
+            burgerContent.classList.toggle('show');
+        });
+
+        document.addEventListener('click', function (e) {
+            const burgerContent = document.getElementById('burgerContent');
+            const burgerBtn = document.getElementById('burgerBtn');
+            if (!burgerContent.contains(e.target) && !burgerBtn.contains(e.target)) {
+                burgerContent.classList.remove('show');
+                burgerBtn.classList.remove('active');
+            }
+        });
+
+        document.querySelectorAll('.burger-item').forEach(item => {
+            item.addEventListener('click', function () {
+                const burgerContent = document.getElementById('burgerContent');
+                const burgerBtn = document.getElementById('burgerBtn');
+                burgerContent.style.opacity = '0';
+                burgerContent.style.transform = 'translateY(-10px) scale(0.95)';
+                setTimeout(() => {
+                    burgerContent.classList.remove('show');
+                    burgerBtn.classList.remove('active');
+                    burgerContent.style.opacity = '';
+                    burgerContent.style.transform = '';
+                }, 300);
+            });
+        });
+
+        // ===== Анимация перехода между страницами =====
+        function navigateWithTransition(url) {
+            const transition = document.createElement('div');
+            transition.className = 'page-transition active';
+            document.body.appendChild(transition);
+            setTimeout(() => { window.location.href = url; }, 600);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const transition = document.querySelector('.page-transition');
+            if (transition) {
+                transition.classList.remove('active');
+                setTimeout(() => transition.remove(), 600);
+            }
+        });
     </script>
 </body>
 </html>
-
