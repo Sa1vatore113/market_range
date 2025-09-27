@@ -25,7 +25,7 @@
             background-color: var(--bg-main);
             color: var(--text-light);
         }
-
+    
         .card-block {
             background-color: var(--bg-card);
             color: var(--text-light);
@@ -137,6 +137,7 @@
             border-color: transparent !important;
             z-index: 10;
         }
+
         .burger-menu {
             position: fixed;
             top: 20px;
@@ -145,8 +146,8 @@
         }
 
         .burger-btn {
-            background: var(--card-bg);
-            border: 1px solid var(--input-border);
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             width: 50px;
             height: 50px;
@@ -169,7 +170,7 @@
         .burger-line {
             width: 24px;
             height: 2px;
-            background: var(--text-color);
+            background: var(--text-light);
             transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             border-radius: 2px;
         }
@@ -191,7 +192,7 @@
             position: absolute;
             top: 100%;
             right: 0;
-            background: var(--card-bg);
+            background: var(--bg-card);
             border-radius: 12px;
             padding: 15px;
             min-width: 220px;
@@ -200,7 +201,7 @@
             opacity: 0;
             transform: translateY(-10px) scale(0.95);
             transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            border: 1px solid var(--input-border);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
             .burger-content.show {
@@ -234,10 +235,10 @@
         }
 
             .burger-item:hover {
-                background: var(--accent-color);
-                color: var(--btn-text-color);
+                background: var(--accent-purple-end);
+                color: var(--text-light);
                 transform: translateX(-5px);
-                border-color: var(--accent-hover);
+                border-color: var(--accent-purple-start);
                 box-shadow: 0 4px 12px rgba(189, 189, 189, 0.2);
             }
 
@@ -275,6 +276,195 @@
                 transform: translateY(0) scale(1);
             }
         }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Анимация для всего контента */
+        .main-content {
+            animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+        }
+
+        /* Задержки для последовательного появления */
+        .card-block {
+            animation: slideInFromTop 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s both;
+        }
+
+        /* Современные градиенты и тени */
+        .modern-gradient {
+            background: linear-gradient(135deg, var(--accent-purple-start) 0%, var(--accent-purple-end) 50%, #6366F1 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 4s ease infinite;
+        }
+
+        .glass-effect {
+            background: rgba(28, 28, 35, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Обновленные стили для верхнего блока */
+        .creation-card {
+            background: linear-gradient(145deg, #1C1C23 0%, #19191F 100%);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(139, 92, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .symmetric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1px 1fr;
+            gap: 0;
+            align-items: start;
+        }
+
+        .divider {
+            background: linear-gradient(to bottom, transparent 0%, rgba(139, 92, 246, 0.3) 50%, transparent 100%);
+            width: 1px;
+            height: 100%;
+            margin: 0 auto;
+        }
+
+        /* Улучшенные инпуты */
+        .enhanced-input {
+            background: rgba(17, 17, 21, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+            .enhanced-input:focus {
+                border-color: var(--accent-purple-end);
+                box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1), 0 4px 20px rgba(139, 92, 246, 0.2);
+                transform: translateY(-2px);
+            }
+
+        /* Современные кнопки */
+        .modern-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+            .modern-btn::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+                transition: left 0.6s;
+            }
+
+            .modern-btn:hover::before {
+                left: 100%;
+            }
+
+            .modern-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+            }
+        .animate-fadeInUp {
+            animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+        }
+        /* Плавне прокручування */
+        .category-list-container::-webkit-scrollbar,
+        .messages-container::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+
+        /* Скрывает полосу прокрутки для IE */
+        .category-list-container,
+        .messages-container {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+
+        .category-list-container {
+            /* Установлена высота, чтобы было видно 9 полных категорий */
+            max-height: 440px;
+            overflow-y: auto; /* Включает стандартную прокрутку */
+            position: relative;
+            scroll-behavior: smooth; /* Плавная прокрутка */
+        }
+
+        /* Стиль контейнера сообщений (4-5 видимых элементов) */
+        .messages-container {
+            /* Установлена высота, достаточная для 4-5 карточек сообщений */
+            max-height: 560px;
+            overflow-y: auto;
+        }
+
+        .pagination-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(28, 28, 35, 0.5);
+            border-radius: 10px;
+        }
+
+        .pagination-btn {
+            background: var(--input-bg);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            color: var(--text-light);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+            .pagination-btn:hover:not(:disabled) {
+                background: var(--accent-purple-end);
+                transform: translateY(-1px);
+            }
+
+            .pagination-btn:disabled {
+                opacity: 0.4;
+                cursor: not-allowed;
+            }
+
+        .pagination-info {
+            font-size: 0.9em;
+            color: var(--text-muted);
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -285,71 +475,105 @@
             <div class="burger-line"></div>
         </div>
         <div class="burger-content" id="burgerContent">
-           <div class="burger-item" onclick="navigateWithTransition('index.html')">Інструменти для аналізу ринку</div>
+            <div class="burger-item" onclick="navigateWithTransition('index.html')">Інструменти для аналізу ринку</div>
             <div class="burger-item" onclick="navigateWithTransition('message_manager.html')">Офера</div>
         </div>
     </div>
 
     <!-- Головний контейнер (Центрування та обмеження ширини) -->
-    <div id="app-container" class="p-4 md:p-12 max-w-6xl mx-auto">
+    <div id="app-container" class="main-content p-4 md:p-12 max-w-6xl mx-auto">
 
-        <h1 class="text-3xl font-bold mb-10 text-center text-gray-200">Менеджер Шаблонів Повідомлень</h1>
+        <h1 class="text-3xl font-bold mb-10 text-center text-gray-200 animate-fadeInUp">Менеджер Шаблонів Повідомлень</h1>
 
-        <!-- 1. Верхній Блок (Створення, Переклад, Управління) - ОБЪЕДИНЕННЫЙ -->
-        <div class="card-block p-6 rounded-xl mb-8">
-            <h2 class="text-2xl font-bold mb-6 border-b pb-3 border-gray-700">Створення та Інструменти Шаблонів</h2>
+        <!-- 1. Верхній Блок (Створення, Управління) - СИМЕТРИЧНИЙ -->
+        <div class="creation-card p-8 rounded-2xl mb-8">
+            <h2 class="text-2xl font-bold mb-8 text-center modern-gradient bg-clip-text text-transparent">
+                🚀 Створення та Управління Шаблонами
+            </h2>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
+            <div class="symmetric-grid">
                 <!-- ЛІВА ЧАСТИНА: Введення та Додавання Повідомлення -->
-                <div>
-                    <h3 class="text-xl font-semibold mb-4 text-gray-300">Додати Шаблон</h3>
+                <div class="pr-8">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-2 h-8 bg-gradient-to-b from-purple-500 to-purple-600 rounded-full"></div>
+                        <h3 class="text-xl font-semibold text-gray-300">Додати Нове Повідомлення</h3>
+                    </div>
 
                     <!-- Вибір Категорії -->
-                    <div class="mb-4">
-                        <select id="category-select" class="input-field w-full p-3 rounded-lg appearance-none">
-                            <option value="">Оберіть категорію</option>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium mb-3 text-gray-400">
+                            📁 Категорія
+                        </label>
+                        <select id="category-select" class="enhanced-input w-full p-4 rounded-xl appearance-none modern-btn">
+                            <option value="">Оберіть категорію...</option>
                         </select>
                     </div>
 
                     <!-- Оригінал (ENG) -->
-                    <label for="new-message-content-eng" class="block text-sm font-medium mb-1 text-gray-400">Текст (Оригінал ENG):</label>
-                    <textarea id="new-message-content-eng" placeholder="Введіть текст повідомлення англійською..." rows="3" class="textarea-field w-full p-3 rounded-lg mb-3"></textarea>
+                    <div class="mb-4">
+                        <label for="new-message-content-eng" class="block text-sm font-medium mb-3 text-gray-400">
+                            🇺🇸 Англійський текст (Оригінал)
+                        </label>
+                        <textarea id="new-message-content-eng" placeholder="Введіть текст повідомлення англійською..."
+                                  rows="3" class="enhanced-input w-full p-4 rounded-xl resize-none"></textarea>
+                    </div>
 
                     <!-- Переклад (UA) -->
-                    <label for="new-message-content-ua" class="block text-sm font-medium mb-1 text-gray-400">Текст (Переклад UA):</label>
-                    <textarea id="new-message-content-ua" placeholder="Сюди буде додано переклад, або введіть його вручну..." rows="3" class="textarea-field w-full p-3 rounded-lg mb-4"></textarea>
+                    <div class="mb-6">
+                        <label for="new-message-content-ua" class="block text-sm font-medium mb-3 text-gray-400">
+                            🇺🇦 Український переклад
+                        </label>
+                        <textarea id="new-message-content-ua" placeholder="Введіть переклад українською..."
+                                  rows="3" class="enhanced-input w-full p-4 rounded-xl resize-none"></textarea>
+                    </div>
 
-                    <button id="add-message-btn" class="btn-primary w-full py-3 rounded-lg font-semibold" disabled>
-                        Додати Повідомлення
+                    <button id="add-message-btn" class="modern-btn w-full py-4 rounded-xl font-semibold bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-gray-700 hover:to-gray-800 transition-all duration-300" disabled>
+                        ➕ Додати Повідомлення
                     </button>
                 </div>
 
-                <!-- ПРАВА ЧАСТИНА: Інструменти та Управління -->
-                <div class="lg:pt-0 pt-6 border-t lg:border-t-0 lg:border-l border-gray-700 lg:pl-6">
+                <!-- ДЕЛІТЕР -->
+                <div class="divider"></div>
 
-                    <!-- Секція 1: Переклад Gemini -->
-                    <h3 class="text-xl font-semibold mb-4 text-gray-300">Інструменти ШІ</h3>
-                    <div class="mb-6 border-b pb-4 border-gray-700">
-                        <button id="gemini-translate-btn" class="btn-primary px-4 py-3 rounded-lg text-lg font-semibold flex items-center justify-center w-full" disabled>
-                            <span id="gemini-spinner" class="hidden animate-spin h-5 w-5 mr-3 border-2 border-current border-t-transparent rounded-full"></span>
-                            ✨ Перевести на UA (Gemini)
-                        </button>
-                        <p class="text-xs text-gray-500 mt-2 text-center">Натисніть, щоб автоматично перекласти ENG текст.</p>
+                <!-- ПРАВА ЧАСТИНА: Управління Категоріями -->
+                <div class="pl-8">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-2 h-8 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full"></div>
+                        <h3 class="text-xl font-semibold text-gray-300">Керування Категоріями</h3>
                     </div>
 
-                    <!-- Секція 2: Управління Категоріями -->
-                    <h3 class="text-xl font-semibold mb-4 text-gray-300">Створити/Очистити Категорії</h3>
-                    <div class="flex space-x-3 mb-4">
-                        <!-- ID: new-category-name -->
-                        <input type="text" id="new-category-name" placeholder="Нова назва категорії" class="input-field w-full p-3 rounded-lg flex-grow">
-                        <!-- ID: add-category-btn -->
-                        <button id="add-category-btn" class="btn-primary px-6 py-3 rounded-lg font-semibold whitespace-nowrap">Створити</button>
+                    <!-- Створення нової категорії -->
+                    <div class="mb-8">
+                        <label class="block text-sm font-medium mb-3 text-gray-400">
+                            📂 Створити нову категорію
+                        </label>
+                        <div class="flex gap-3">
+                            <input type="text" id="new-category-name" placeholder="Назва нової категорії..."
+                                   class="enhanced-input flex-grow p-4 rounded-xl">
+                            <button id="add-category-btn" class="modern-btn px-6 py-4 rounded-xl font-semibold bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 transition-all duration-300 whitespace-nowrap">
+                                Створити
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Кнопка Очистити Local Storage (Градієнтна) -->
-                    <button id="clear-all-data-btn" class="btn-gradient w-full py-3 rounded-lg font-semibold mt-4">
-                        Очистити УСІ Дані (Local Storage)
+                    <!-- Статистика -->
+                    <div class="glass-effect p-6 rounded-xl mb-6">
+                        <h4 class="font-semibold mb-3 text-gray-300">📊 Статистика</h4>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div class="text-center p-3 bg-gray-800/50 rounded-lg">
+                                <div class="text-2xl font-bold text-purple-400" id="categories-count">0</div>
+                                <div class="text-gray-400">Категорій</div>
+                            </div>
+                            <div class="text-center p-3 bg-gray-800/50 rounded-lg">
+                                <div class="text-2xl font-bold text-blue-400" id="messages-total-count">0</div>
+                                <div class="text-gray-400">Повідомлень</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Очищення даних -->
+                    <button id="clear-all-data-btn" class="modern-btn w-full py-4 rounded-xl font-semibold bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 transition-all duration-300">
+                        🗑️ Очистити Усі Дані
                     </button>
                 </div>
             </div>
@@ -360,21 +584,23 @@
             <div class="grid grid-cols-1 lg:grid-cols-4">
 
                 <!-- Блок Категорій (1/4 ширини) -->
-                <div class="p-4 lg:col-span-1 max-h-[70vh] overflow-y-auto border-b lg:border-r lg:border-b-0 border-gray-700">
+                <div class="p-4 lg:col-span-1 border-b lg:border-r lg:border-b-0 border-gray-700">
                     <h2 class="text-xl font-semibold mb-4 border-b pb-2 border-gray-700">
                         Категорії
                         <span id="all-messages-count" class="text-sm font-normal ml-2 text-gray-400">(Усього 0)</span>
                     </h2>
-                    <div id="category-list" class="space-y-1">
-                        <div id="category-all" data-category-id="all" class="category-item p-2 rounded-lg transition duration-150 selected-category" role="button">
-                            Всі Повідомлення
+                    <div class="category-list-container">
+                        <div id="category-list" class="space-y-1 pr-2">
+                            <div id="category-all" data-category-id="all" class="category-item p-2 rounded-lg transition duration-150 selected-category" role="button">
+                                Всі Повідомлення
+                            </div>
+                            <!-- Категорії будуть додані сюди JS -->
                         </div>
-                        <!-- Категорії будуть додані сюди JS -->
                     </div>
                 </div>
 
                 <!-- Блок Повідомлень (3/4 ширини) -->
-                <div class="p-6 lg:col-span-3 max-h-[70vh] overflow-y-auto">
+                <div class="p-6 lg:col-span-3 messages-container">
                     <h2 id="messages-header" class="text-xl font-semibold mb-4 border-b pb-2 border-gray-700">
                         Повідомлення в категорії "Всі Повідомлення"
                     </h2>
@@ -399,20 +625,17 @@
         let messages = []; // [{id, categoryId, contentEng, contentUa}]
         let selectedCategoryId = 'all'; // Поточна обрана категорія
 
-        // --- Gemini API Конфігурація ---
-        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=";
-        const API_KEY = "AIzaSyBvKmOtJTe6BBEmw5Ue6pVQDO5etjE11lpk"; // Приклад ключа (замініть на свій)
+        // --- Пагінація ---
+        let currentPage = 1;
+        const MESSAGES_PER_PAGE = 5; // Кількість повідомлень на сторінці
 
         // --- DOM Елементи (Глобальні) ---
         let engInput;
         let uaInput;
-        let translateBtn;
-        let spinner;
         let categorySelect;
         let addMessageBtn;
-        let newCategoryInput; // Додано для зручності
-        let addCategoryBtn; // Додано для зручності
-
+        let newCategoryInput;
+        let addCategoryBtn;
 
         // --- 1. LOCAL STORAGE: Збереження та Завантаження ---
 
@@ -427,7 +650,6 @@
                 renderUI();
             } catch (e) {
                 console.error("Помилка завантаження даних з Local Storage:", e);
-                // Завантаження дефолтних значень у разі помилки парсингу
                 categories = [];
                 messages = [];
                 renderUI();
@@ -444,7 +666,6 @@
         }
 
         function clearAllData() {
-            // Використовуємо модальне вікно замість alert/confirm
             const result = window.prompt("Увага! Це повністю видалить усі дані (категорії та повідомлення) з вашого браузера. Для підтвердження введіть 'ОЧИСТИТИ'.");
 
             if (result && result.toUpperCase() === 'ОЧИСТИТИ') {
@@ -453,111 +674,32 @@
                 categories = [];
                 messages = [];
                 selectedCategoryId = 'all';
+                currentPage = 1;
                 renderUI();
                 console.log("Усі дані успішно видалено.");
             } else if (result !== null) {
-                // Користувач ввів неправильне слово або натиснув Cancel, але не просто закрив
                 if (result.toUpperCase() !== 'ОЧИСТИТИ') {
                     console.log("Дані не видалено. Введено неправильний код підтвердження.");
                 }
             }
         }
 
-
-        // --- 2. LLM: Переклад через Gemini API ---
-
-        // Функція для виклику API
-        async function callGeminiApi(payload, retries = 3) {
-            const url = API_URL + API_KEY;
-
-            if (API_KEY === "") {
-                throw new Error("API Key is missing. Please provide your Gemini API key to use translation feature.");
-            }
-
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) {
-                        if (response.status === 429 && i < retries - 1) {
-                            const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
-                            await new Promise(resolve => setTimeout(resolve, delay));
-                            continue;
-                        }
-                        throw new Error(`API call failed with status: ${response.status} ${response.statusText}`);
-                    }
-
-                    const result = await response.json();
-                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (text) {
-                        return text.trim();
-                    }
-                    throw new Error("Invalid response structure from API. Translation text not found.");
-
-                } catch (error) {
-                    if (i === retries - 1) {
-                        console.error("Gemini API Error after multiple retries:", error);
-                        throw error;
-                    }
-                }
-            }
-        }
-
-        async function generateTranslation() {
-            const engText = engInput.value.trim();
-            if (!engText) return;
-
-            // Блокування UI
-            translateBtn.disabled = true;
-            spinner.classList.remove('hidden');
-            uaInput.placeholder = "Переклад генерується. Зачекайте...";
-            uaInput.value = ''; // Очистити поле перед генерацією
-
-            const systemPrompt = "You are a professional translator specializing in English-Ukrainian localization. Provide only the fluent and contextually appropriate Ukrainian translation for the user's text. Do not include any extra commentary, explanations, or quotes.";
-            const userQuery = `Translate the following English text to Ukrainian: "${engText}"`;
-
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
-            };
-
-            try {
-                const translatedText = await callGeminiApi(payload);
-                uaInput.value = translatedText;
-            } catch (error) {
-                uaInput.placeholder = "Помилка перекладу. Перевірте API ключ та консоль для деталей.";
-                console.error("Translation generation failed:", error);
-            } finally {
-                // Розблокування UI
-                spinner.classList.add('hidden');
-                updateButtonStates();
-            }
-        }
-
-
-        // --- 3. CRUD: Управління Даними ---
+        // --- 2. CRUD: Управління Даними ---
 
         function generateUniqueId() {
             return Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
         }
 
-        // --- ФУНКЦІЯ ВИПРАВЛЕННЯ: addCategory ---
         function addCategory() {
-            // Використовуємо глобально визначений newCategoryInput
             const name = newCategoryInput.value.trim();
 
-            // Ключова перевірка: чи є назва категорії
             if (name) {
                 const newCategory = {
                     id: generateUniqueId(),
                     name: name
                 };
                 categories.push(newCategory);
-                newCategoryInput.value = ''; // Очищення поля вводу
+                newCategoryInput.value = '';
                 saveDataToLocal();
                 renderUI();
                 console.log(`Категорію "${name}" додано.`);
@@ -565,7 +707,6 @@
                 console.log("Назва категорії не може бути порожньою.");
             }
         }
-        // --- КІНЕЦЬ ФУНКЦІЇ ВИПРАВЛЕННЯ ---
 
         function addMessage() {
             const categoryId = categorySelect.value;
@@ -581,7 +722,6 @@
                 };
                 messages.push(newMessage);
 
-                // Очищення полів
                 engInput.value = '';
                 uaInput.value = '';
 
@@ -591,27 +731,27 @@
             }
         }
 
-
-        // --- 4. UI: Рендеринг та Обробники Подій ---
+        // --- 3. UI: Рендеринг та Обробники Подій ---
 
         function updateButtonStates() {
             const isCategorySelected = categorySelect.value !== "";
             const isAnyContent = engInput.value.trim() !== "" || uaInput.value.trim() !== "";
 
-            // Кнопка "Додати Повідомлення" активна, якщо вибрана категорія І є хоча б один текст
             addMessageBtn.disabled = !(isCategorySelected && isAnyContent);
+        }
 
-            // Кнопка "Перевести" активна, якщо є ENG текст
-            translateBtn.disabled = engInput.value.trim().length === 0 || spinner.classList.contains('animate-spin');
+        function updateStatistics() {
+            document.getElementById('categories-count').textContent = categories.length;
+            document.getElementById('messages-total-count').textContent = messages.length;
         }
 
         function renderUI() {
             renderCategoryList();
             renderCategorySelect();
             renderMessages();
-            updateButtonStates(); // Оновлення стану кнопок
+            updateButtonStates();
+            updateStatistics();
 
-            // Оновлення загальної кількості повідомлень
             document.getElementById('all-messages-count').textContent = `(Усього ${messages.length})`;
         }
 
@@ -619,7 +759,6 @@
             const listContainer = document.getElementById('category-list');
             listContainer.innerHTML = '';
 
-            // Додати кнопку "Всі Повідомлення"
             const allItem = document.createElement('div');
             allItem.dataset.categoryId = 'all';
             allItem.className = `category-item p-2 rounded-lg transition duration-150 cursor-pointer ${selectedCategoryId === 'all' ? 'selected-category' : ''}`;
@@ -627,7 +766,6 @@
             allItem.addEventListener('click', () => setSelectedCategory('all'));
             listContainer.appendChild(allItem);
 
-            // Додати інші категорії
             categories.forEach(cat => {
                 const messageCount = messages.filter(m => m.categoryId === cat.id).length;
                 const item = document.createElement('div');
@@ -650,7 +788,6 @@
                 categorySelect.appendChild(option);
             });
 
-            // Відновлення попереднього вибору
             if (currentSelection && categories.some(cat => cat.id === currentSelection)) {
                 categorySelect.value = currentSelection;
             } else {
@@ -671,89 +808,125 @@
                 ? 'Всі Повідомлення'
                 : categories.find(c => c.id === selectedCategoryId)?.name || 'Невідома Категорія';
 
+            // Пагінація
+            const totalPages = Math.ceil(filteredMessages.length / MESSAGES_PER_PAGE);
+            currentPage = Math.min(currentPage, Math.max(1, totalPages));
+
+            const startIndex = (currentPage - 1) * MESSAGES_PER_PAGE;
+            const endIndex = startIndex + MESSAGES_PER_PAGE;
+            const paginatedMessages = filteredMessages.slice(startIndex, endIndex);
+
             header.textContent = `Повідомлення в категорії "${categoryName}" (${filteredMessages.length})`;
 
-            if (filteredMessages.length === 0) {
+            if (paginatedMessages.length === 0) {
                 listContainer.innerHTML = '<p id="no-messages-msg" class="text-gray-500 italic">У цій категорії поки що немає повідомлень.</p>';
+                renderPaginationControls(filteredMessages.length, totalPages);
                 return;
             }
 
-            filteredMessages.forEach(msg => {
+            paginatedMessages.forEach(msg => {
                 const messageDiv = document.createElement('div');
+                messageDiv.className = 'message-item p-3 rounded-lg bg-gray-800/50 block transition duration-150 border-gray-700 hover:border-indigo-500/50 hover:shadow-lg relative';
 
-                // ВАЖЛИВО: Додаємо клас copy-active для усунення конфліктів
-                messageDiv.className = 'message-item p-3 rounded-lg bg-gray-800/50 block transition duration-150 border-gray-700 hover:border-indigo-500/50 hover:shadow-lg';
-
-                // SVG для Іконки Видалення (Кошик)
                 const deleteSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.723-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 100 2v6a1 1 0 102 0V8a1 1 0 00-2 0z" clip-rule="evenodd" />
-                        </svg>`;
+                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.723-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 100 2v6a1 1 0 102 0V8a1 1 0 00-2 0z" clip-rule="evenodd" />
+                </svg>`;
 
-                // Кнопка Видалення: маленька, з іконкою, абсолютне позиціонування
                 const deleteButton = document.createElement('button');
                 deleteButton.className = 'absolute top-3 right-3 text-red-400 hover:text-red-300 p-1 rounded-full bg-gray-700/50 hover:bg-gray-700 transition duration-150';
                 deleteButton.innerHTML = deleteSvg;
                 deleteButton.title = 'Видалити повідомлення';
                 deleteButton.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Запобігаємо копіюванню
+                    e.stopPropagation();
                     deleteMessage(msg.id);
                 });
 
-                // Компактний вміст
                 messageDiv.innerHTML = `
-                            <div class="space-y-1 pr-8"> <!-- Додано pr-8 для відступу під кнопку -->
-                                <!-- Англійський вміст (Оригінал) -->
-                                <p class="text-sm font-semibold text-gray-100 whitespace-pre-wrap">${msg.contentEng || '— (ENG: Немає)'}</p>
-
-                                <!-- Український вміст (Переклад) -->
-                                <p class="text-xs italic text-gray-400 whitespace-pre-wrap">${msg.contentUa || '— (UA: Немає)'}</p>
-                            </div>
-                        `;
-                messageDiv.appendChild(deleteButton); // Додати кнопку видалення
-
-                // Прив'язка копіювання до всього div. Копіюємо АНГЛІЙСЬКИЙ оригінал.
+                <div class="space-y-1 pr-8">
+                    <p class="text-sm font-semibold text-gray-100 whitespace-pre-wrap">${msg.contentEng || '— (ENG: Немає)'}</p>
+                    <p class="text-xs italic text-gray-400 whitespace-pre-wrap">${msg.contentUa || '— (UA: Немає)'}</p>
+                </div>
+            `;
+                messageDiv.appendChild(deleteButton);
                 messageDiv.addEventListener('click', () => copyMessage(msg.contentEng, messageDiv));
-
                 listContainer.appendChild(messageDiv);
             });
+
+            renderPaginationControls(filteredMessages.length, totalPages);
+        }
+
+        // --- Нова функція для пагінації ---
+        function renderPaginationControls(totalMessages, totalPages) {
+            const listContainer = document.getElementById('message-list');
+
+            // Видаляємо стару пагінацію, якщо вона є
+            const oldPagination = listContainer.querySelector('.pagination-controls');
+            if (oldPagination) {
+                oldPagination.remove();
+            }
+
+            if (totalMessages > MESSAGES_PER_PAGE) {
+                const paginationDiv = document.createElement('div');
+                paginationDiv.className = 'pagination-controls';
+
+                paginationDiv.innerHTML = `
+                <button class="pagination-btn" id="prev-page" ${currentPage === 1 ? 'disabled' : ''}>
+                    ← Попередня
+                </button>
+                <span class="pagination-info">
+                    Сторінка ${currentPage} з ${totalPages} (всього: ${totalMessages})
+                </span>
+                <button class="pagination-btn" id="next-page" ${currentPage === totalPages ? 'disabled' : ''}>
+                    Наступна →
+                </button>
+            `;
+
+                listContainer.appendChild(paginationDiv);
+
+                // Додаємо обробники подій
+                document.getElementById('prev-page').addEventListener('click', () => {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        renderMessages();
+                    }
+                });
+
+                document.getElementById('next-page').addEventListener('click', () => {
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        renderMessages();
+                    }
+                });
+            }
         }
 
         function setSelectedCategory(id) {
             selectedCategoryId = id;
+            currentPage = 1; // Скидаємо на першу сторінку при зміні категорії
             renderUI();
         }
 
         function deleteMessage(id) {
             const index = messages.findIndex(m => m.id === id);
             if (index !== -1) {
-                // Видалення повідомлення
                 messages.splice(index, 1);
-
-                // Перевірка: чи не залишилися категорії без повідомлень (і, можливо, їх видалення)
-                // Це не обов'язково, але для чистішого UI може бути корисним.
-                // Наразі просто оновлюємо UI, щоб відобразити нову кількість.
-
                 saveDataToLocal();
                 renderUI();
             }
         }
 
-        // Функція анімації копіювання, оновлена для кращого контролю hover-ефектів
         function runCopyAnimation(element, isSuccess) {
             const VISIBLE_DURATION = 900;
             const FADE_DURATION = 300;
 
-            // 1. Временно отключаем ховер-эффекты
             element.classList.add('copy-animation-active');
 
-            // 2. Добавляем зеленое свечение (используем кастомные классы)
             if (isSuccess) {
                 element.classList.add('ring-green-animation');
             } else {
                 element.classList.add('ring-red-animation');
             }
 
-            // 3. Создаем оверлей
             const overlay = document.createElement('div');
             overlay.className = `absolute inset-0 flex items-center justify-center rounded-lg copy-overlay pointer-events-none ${isSuccess ? 'bg-gray-900/90' : 'bg-red-900/80'}`;
             overlay.innerHTML = isSuccess
@@ -762,12 +935,9 @@
 
             element.appendChild(overlay);
 
-            // 4. Запускаем таймер на восстановление
             setTimeout(() => {
-                // Убираем свечение
                 element.classList.remove('ring-green-animation', 'ring-red-animation');
 
-                // Плавное исчезновение оверлея
                 if (element.contains(overlay)) {
                     overlay.classList.add('hidden');
 
@@ -775,7 +945,6 @@
                         if (element.contains(overlay)) {
                             element.removeChild(overlay);
                         }
-                        // Восстанавливаем ховер-эффекты
                         element.classList.remove('copy-animation-active');
                     }, FADE_DURATION);
                 }
@@ -783,13 +952,11 @@
         }
 
         function copyMessage(text, element) {
-            // 1. Обробка помилки: немає тексту для копіювання
             if (!text || text.trim() === '— (ENG: Немає)') {
-                runCopyAnimation(element, false); // Помилка (Червоний ефект)
+                runCopyAnimation(element, false);
                 return;
             }
 
-            // 2. Копіювання тексту (виконується миттєво)
             const tempInput = document.createElement('textarea');
             tempInput.value = text;
             document.body.appendChild(tempInput);
@@ -797,44 +964,34 @@
             document.execCommand('copy');
             document.body.removeChild(tempInput);
 
-            // 3. Запуск успішної анімації
-            runCopyAnimation(element, true); // Успіх (Зелений ефект)
+            runCopyAnimation(element, true);
         }
 
         // --- Ініціалізація та Обробники Подій ---
         function initApp() {
-            // 1. Отримання DOM елементів
             engInput = document.getElementById('new-message-content-eng');
             uaInput = document.getElementById('new-message-content-ua');
-            translateBtn = document.getElementById('gemini-translate-btn');
-            spinner = document.getElementById('gemini-spinner');
             categorySelect = document.getElementById('category-select');
             addMessageBtn = document.getElementById('add-message-btn');
-            newCategoryInput = document.getElementById('new-category-name'); // Отримання поля вводу
-            addCategoryBtn = document.getElementById('add-category-btn');     // Отримання кнопки
+            newCategoryInput = document.getElementById('new-category-name');
+            addCategoryBtn = document.getElementById('add-category-btn');
 
-            // 2. Завантаження даних та рендеринг UI
             loadDataFromLocal();
 
-            // 3. Обробники для CRUD
-            // Тепер використовуємо addCategoryBtn, отриману вище
             addCategoryBtn.addEventListener('click', addCategory);
             document.getElementById('add-message-btn').addEventListener('click', addMessage);
             document.getElementById('clear-all-data-btn').addEventListener('click', clearAllData);
 
-            // 4. Обробники для LLM та UI
             categorySelect.addEventListener('change', updateButtonStates);
             engInput.addEventListener('input', updateButtonStates);
             uaInput.addEventListener('input', updateButtonStates);
-            translateBtn.addEventListener('click', generateTranslation);
 
-            // Приховуємо плейсхолдер UA, якщо є ключ
-            if (API_KEY === "") {
-                uaInput.placeholder = "Сюди буде додано переклад, або введіть його вручну (API ключ відсутній)";
-            }
+            uaInput.placeholder = "Сюди буде додано переклад, або введіть його вручну";
         }
 
         document.addEventListener('DOMContentLoaded', initApp);
+
+        // Бургер-меню
         document.getElementById('burgerBtn').addEventListener('click', function (e) {
             e.stopPropagation();
             const burgerContent = document.getElementById('burgerContent');
@@ -866,7 +1023,7 @@
             });
         });
 
-        // ===== Анимация перехода между страницами =====
+        // Анимация перехода между страницами
         function navigateWithTransition(url) {
             const transition = document.createElement('div');
             transition.className = 'page-transition active';
@@ -881,10 +1038,6 @@
                 setTimeout(() => transition.remove(), 600);
             }
         });
-
     </script>
 </body>
 </html>
-
-
-
