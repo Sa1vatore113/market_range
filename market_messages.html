@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Менеджер Шаблонів Повідомлень</title>
+    <!-- Завантаження Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Стилі, натхненні наданим дизайном (Темний, Мінімалістичний) */
+        :root {
+            --bg-main: #141418; /* Дуже глибокий темний фон */
+            --bg-card: #1C1C23; /* Фон для блоків */
+            --text-light: #F3F4F6;
+            --text-muted: #9CA3AF;
+            --accent-purple-start: #6D28D9; /* Глибокий фіолетовий для градієнта */
+            --accent-purple-end: #8B5CF6; /* Світліший фіолетовий */
+            --input-bg: #111115; /* Темніший за блок для ефекту вставки */
+        }
+
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-light);
+        }
+
+        .card-block {
+            background-color: var(--bg-card);
+            color: var(--text-light);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .input-field, .textarea-field, select {
+            background-color: var(--input-bg);
+            color: var(--text-light);
+            border: none;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+            transition: all 0.2s;
+        }
+
+            .input-field:focus, .textarea-field:focus, select:focus {
+                outline: none;
+                box-shadow: 0 0 0 2px var(--accent-purple-end);
+            }
+
+        /* Primary Action Button */
+        .btn-primary {
+            background-color: #D1D5DB; /* Light gray */
+            color: #1F2937; /* Dark text */
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+            .btn-primary:hover:not(:disabled) {
+                background-color: #E5E7EB;
+                transform: translateY(-1px);
+            }
+
+            .btn-primary:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+        /* Secondary Gradient Button */
+        .btn-gradient {
+            background: linear-gradient(to right, var(--accent-purple-start), var(--accent-purple-end));
+            color: var(--text-light);
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
+            transition: all 0.2s;
+        }
+
+            .btn-gradient:hover:not(:disabled) {
+                opacity: 0.9;
+                transform: translateY(-1px);
+            }
+
+        /* Стилі для елементів списку (Категорії та Повідомлення) */
+        .category-item {
+            transition: background-color 0.2s, border-color 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+            .category-item:hover {
+                background-color: rgba(139, 92, 246, 0.1); /* Легкий фіолетовий hover */
+                cursor: pointer;
+            }
+
+        .selected-category {
+            background-color: rgba(139, 92, 246, 0.2);
+            border-left: 4px solid var(--accent-purple-end);
+            font-weight: 600;
+        }
+
+        /* Стиль для компактних карток повідомлень */
+        .message-item {
+            cursor: pointer;
+            border: 1px solid transparent;
+            position: relative;
+            transition: all 0.3s ease-in-out;
+        }
+
+            /* Стилі hover для message-item */
+            .message-item:hover {
+                border-color: rgba(139, 92, 246, 0.5);
+                box-shadow: 0 0 8px rgba(139, 92, 246, 0.2);
+            }
+        /* Стиль для оверлею копіювання */
+        .copy-overlay {
+            opacity: 1;
+            /* Збільшуємо час transition для більш плавного зникнення */
+            transition: opacity 0.3s ease-out;
+        }
+
+            .copy-overlay.hidden {
+                opacity: 0;
+            }
+        /* НОВІ СТИЛІ ДЛЯ АНІМАЦІЇ КОПІЮВАННЯ */
+        .message-item.copy-animation-active {
+            border-color: transparent !important;
+            box-shadow: none !important;
+        }
+
+        /* Явне визначення зеленого свічення */
+        .message-item.ring-green-animation {
+            box-shadow: 0 0 0 4px #10B981, 0 0 20px #10B981 !important;
+            border-color: transparent !important;
+            z-index: 10;
+        }
+
+        /* Явне визначення червоного свічення */
+        .message-item.ring-red-animation {
+            box-shadow: 0 0 0 4px #EF4444, 0 0 20px #EF4444 !important;
+            border-color: transparent !important;
+            z-index: 10;
+        }
+        .burger-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .burger-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+            .burger-btn:hover {
+                transform: scale(1.1);
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+                border-color: var(--accent-color);
+            }
+
+        .burger-line {
+            width: 24px;
+            height: 2px;
+            background: var(--text-color);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border-radius: 2px;
+        }
+
+        .burger-btn.active .burger-line:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
+        }
+
+        .burger-btn.active .burger-line:nth-child(2) {
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        .burger-btn.active .burger-line:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
+        }
+
+        .burger-content {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            min-width: 220px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: none;
+            opacity: 0;
+            transform: translateY(-10px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border: 1px solid var(--input-border);
+        }
+
+            .burger-content.show {
+                display: block;
+                opacity: 1;
+                transform: translateY(10px) scale(1);
+                animation: menuSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            }
+
+        @keyframes menuSlideIn {
+            0% {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.9);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(10px) scale(1);
+            }
+        }
+
+        .burger-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            margin: 5px 0;
+            background: var(--input-bg);
+            border: 1px solid transparent;
+            font-weight: 500;
+        }
+
+            .burger-item:hover {
+                background: var(--accent-color);
+                color: var(--btn-text-color);
+                transform: translateX(-5px);
+                border-color: var(--accent-hover);
+                box-shadow: 0 4px 12px rgba(189, 189, 189, 0.2);
+            }
+
+        /* ===== Анимация перехода между страницами ===== */
+        .page-transition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.6s ease;
+        }
+
+            .page-transition.active {
+                opacity: 1;
+                pointer-events: all;
+            }
+
+        .main-container {
+            animation: pageFadeIn 0.8s ease-out;
+        }
+
+        @keyframes pageFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="burger-menu">
+        <div class="burger-btn" id="burgerBtn">
+            <div class="burger-line"></div>
+            <div class="burger-line"></div>
+            <div class="burger-line"></div>
+        </div>
+        <div class="burger-content" id="burgerContent">
+           <div class="burger-item" onclick="navigateWithTransition('index.html')">Інструменти для аналізу ринку</div>
+            <div class="burger-item" onclick="navigateWithTransition('message_manager.html')">Офера</div>
+        </div>
+    </div>
+
+    <!-- Головний контейнер (Центрування та обмеження ширини) -->
+    <div id="app-container" class="p-4 md:p-12 max-w-6xl mx-auto">
+
+        <h1 class="text-3xl font-bold mb-10 text-center text-gray-200">Менеджер Шаблонів Повідомлень</h1>
+
+        <!-- 1. Верхній Блок (Створення, Переклад, Управління) - ОБЪЕДИНЕННЫЙ -->
+        <div class="card-block p-6 rounded-xl mb-8">
+            <h2 class="text-2xl font-bold mb-6 border-b pb-3 border-gray-700">Створення та Інструменти Шаблонів</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- ЛІВА ЧАСТИНА: Введення та Додавання Повідомлення -->
+                <div>
+                    <h3 class="text-xl font-semibold mb-4 text-gray-300">Додати Шаблон</h3>
+
+                    <!-- Вибір Категорії -->
+                    <div class="mb-4">
+                        <select id="category-select" class="input-field w-full p-3 rounded-lg appearance-none">
+                            <option value="">Оберіть категорію</option>
+                        </select>
+                    </div>
+
+                    <!-- Оригінал (ENG) -->
+                    <label for="new-message-content-eng" class="block text-sm font-medium mb-1 text-gray-400">Текст (Оригінал ENG):</label>
+                    <textarea id="new-message-content-eng" placeholder="Введіть текст повідомлення англійською..." rows="3" class="textarea-field w-full p-3 rounded-lg mb-3"></textarea>
+
+                    <!-- Переклад (UA) -->
+                    <label for="new-message-content-ua" class="block text-sm font-medium mb-1 text-gray-400">Текст (Переклад UA):</label>
+                    <textarea id="new-message-content-ua" placeholder="Сюди буде додано переклад, або введіть його вручну..." rows="3" class="textarea-field w-full p-3 rounded-lg mb-4"></textarea>
+
+                    <button id="add-message-btn" class="btn-primary w-full py-3 rounded-lg font-semibold" disabled>
+                        Додати Повідомлення
+                    </button>
+                </div>
+
+                <!-- ПРАВА ЧАСТИНА: Інструменти та Управління -->
+                <div class="lg:pt-0 pt-6 border-t lg:border-t-0 lg:border-l border-gray-700 lg:pl-6">
+
+                    <!-- Секція 1: Переклад Gemini -->
+                    <h3 class="text-xl font-semibold mb-4 text-gray-300">Інструменти ШІ</h3>
+                    <div class="mb-6 border-b pb-4 border-gray-700">
+                        <button id="gemini-translate-btn" class="btn-primary px-4 py-3 rounded-lg text-lg font-semibold flex items-center justify-center w-full" disabled>
+                            <span id="gemini-spinner" class="hidden animate-spin h-5 w-5 mr-3 border-2 border-current border-t-transparent rounded-full"></span>
+                            ✨ Перевести на UA (Gemini)
+                        </button>
+                        <p class="text-xs text-gray-500 mt-2 text-center">Натисніть, щоб автоматично перекласти ENG текст.</p>
+                    </div>
+
+                    <!-- Секція 2: Управління Категоріями -->
+                    <h3 class="text-xl font-semibold mb-4 text-gray-300">Створити/Очистити Категорії</h3>
+                    <div class="flex space-x-3 mb-4">
+                        <!-- ID: new-category-name -->
+                        <input type="text" id="new-category-name" placeholder="Нова назва категорії" class="input-field w-full p-3 rounded-lg flex-grow">
+                        <!-- ID: add-category-btn -->
+                        <button id="add-category-btn" class="btn-primary px-6 py-3 rounded-lg font-semibold whitespace-nowrap">Створити</button>
+                    </div>
+
+                    <!-- Кнопка Очистити Local Storage (Градієнтна) -->
+                    <button id="clear-all-data-btn" class="btn-gradient w-full py-3 rounded-lg font-semibold mt-4">
+                        Очистити УСІ Дані (Local Storage)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Нижній Блок (Категорії та Повідомлення) - ОБЪЕДИНЕННЫЙ -->
+        <div class="card-block p-0 rounded-xl">
+            <div class="grid grid-cols-1 lg:grid-cols-4">
+
+                <!-- Блок Категорій (1/4 ширини) -->
+                <div class="p-4 lg:col-span-1 max-h-[70vh] overflow-y-auto border-b lg:border-r lg:border-b-0 border-gray-700">
+                    <h2 class="text-xl font-semibold mb-4 border-b pb-2 border-gray-700">
+                        Категорії
+                        <span id="all-messages-count" class="text-sm font-normal ml-2 text-gray-400">(Усього 0)</span>
+                    </h2>
+                    <div id="category-list" class="space-y-1">
+                        <div id="category-all" data-category-id="all" class="category-item p-2 rounded-lg transition duration-150 selected-category" role="button">
+                            Всі Повідомлення
+                        </div>
+                        <!-- Категорії будуть додані сюди JS -->
+                    </div>
+                </div>
+
+                <!-- Блок Повідомлень (3/4 ширини) -->
+                <div class="p-6 lg:col-span-3 max-h-[70vh] overflow-y-auto">
+                    <h2 id="messages-header" class="text-xl font-semibold mb-4 border-b pb-2 border-gray-700">
+                        Повідомлення в категорії "Всі Повідомлення"
+                    </h2>
+                    <div id="message-list" class="space-y-3">
+                        <!-- Повідомлення будуть додані сюди JS -->
+                        <p id="no-messages-msg" class="text-gray-500 italic">Розпочніть із додавання першого повідомлення.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <!-- type="module" ПРИБРАНО, щоб дозволити локальний запуск (file://) -->
+    <script>
+        // Видалено Firebase. Використовуємо localStorage.
+
+        const CATEGORIES_KEY = 'messageCategories';
+        const MESSAGES_KEY = 'messages';
+
+        let categories = []; // [{id, name}]
+        let messages = []; // [{id, categoryId, contentEng, contentUa}]
+        let selectedCategoryId = 'all'; // Поточна обрана категорія
+
+        // --- Gemini API Конфігурація ---
+        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=";
+        const API_KEY = "AIzaSyBvKmOtJTe6BBEmw5Ue6pVQDO5etjE11lpk"; // Приклад ключа (замініть на свій)
+
+        // --- DOM Елементи (Глобальні) ---
+        let engInput;
+        let uaInput;
+        let translateBtn;
+        let spinner;
+        let categorySelect;
+        let addMessageBtn;
+        let newCategoryInput; // Додано для зручності
+        let addCategoryBtn; // Додано для зручності
+
+
+        // --- 1. LOCAL STORAGE: Збереження та Завантаження ---
+
+        function loadDataFromLocal() {
+            try {
+                const storedCategories = localStorage.getItem(CATEGORIES_KEY);
+                const storedMessages = localStorage.getItem(MESSAGES_KEY);
+
+                categories = storedCategories ? JSON.parse(storedCategories) : [];
+                messages = storedMessages ? JSON.parse(storedMessages) : [];
+
+                renderUI();
+            } catch (e) {
+                console.error("Помилка завантаження даних з Local Storage:", e);
+                // Завантаження дефолтних значень у разі помилки парсингу
+                categories = [];
+                messages = [];
+                renderUI();
+            }
+        }
+
+        function saveDataToLocal() {
+            try {
+                localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+                localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
+            } catch (e) {
+                console.error("Помилка збереження даних у Local Storage:", e);
+            }
+        }
+
+        function clearAllData() {
+            // Використовуємо модальне вікно замість alert/confirm
+            const result = window.prompt("Увага! Це повністю видалить усі дані (категорії та повідомлення) з вашого браузера. Для підтвердження введіть 'ОЧИСТИТИ'.");
+
+            if (result && result.toUpperCase() === 'ОЧИСТИТИ') {
+                localStorage.removeItem(CATEGORIES_KEY);
+                localStorage.removeItem(MESSAGES_KEY);
+                categories = [];
+                messages = [];
+                selectedCategoryId = 'all';
+                renderUI();
+                console.log("Усі дані успішно видалено.");
+            } else if (result !== null) {
+                // Користувач ввів неправильне слово або натиснув Cancel, але не просто закрив
+                if (result.toUpperCase() !== 'ОЧИСТИТИ') {
+                    console.log("Дані не видалено. Введено неправильний код підтвердження.");
+                }
+            }
+        }
+
+
+        // --- 2. LLM: Переклад через Gemini API ---
+
+        // Функція для виклику API
+        async function callGeminiApi(payload, retries = 3) {
+            const url = API_URL + API_KEY;
+
+            if (API_KEY === "") {
+                throw new Error("API Key is missing. Please provide your Gemini API key to use translation feature.");
+            }
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 429 && i < retries - 1) {
+                            const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            continue;
+                        }
+                        throw new Error(`API call failed with status: ${response.status} ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (text) {
+                        return text.trim();
+                    }
+                    throw new Error("Invalid response structure from API. Translation text not found.");
+
+                } catch (error) {
+                    if (i === retries - 1) {
+                        console.error("Gemini API Error after multiple retries:", error);
+                        throw error;
+                    }
+                }
+            }
+        }
+
+        async function generateTranslation() {
+            const engText = engInput.value.trim();
+            if (!engText) return;
+
+            // Блокування UI
+            translateBtn.disabled = true;
+            spinner.classList.remove('hidden');
+            uaInput.placeholder = "Переклад генерується. Зачекайте...";
+            uaInput.value = ''; // Очистити поле перед генерацією
+
+            const systemPrompt = "You are a professional translator specializing in English-Ukrainian localization. Provide only the fluent and contextually appropriate Ukrainian translation for the user's text. Do not include any extra commentary, explanations, or quotes.";
+            const userQuery = `Translate the following English text to Ukrainian: "${engText}"`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            try {
+                const translatedText = await callGeminiApi(payload);
+                uaInput.value = translatedText;
+            } catch (error) {
+                uaInput.placeholder = "Помилка перекладу. Перевірте API ключ та консоль для деталей.";
+                console.error("Translation generation failed:", error);
+            } finally {
+                // Розблокування UI
+                spinner.classList.add('hidden');
+                updateButtonStates();
+            }
+        }
+
+
+        // --- 3. CRUD: Управління Даними ---
+
+        function generateUniqueId() {
+            return Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
+        }
+
+        // --- ФУНКЦІЯ ВИПРАВЛЕННЯ: addCategory ---
+        function addCategory() {
+            // Використовуємо глобально визначений newCategoryInput
+            const name = newCategoryInput.value.trim();
+
+            // Ключова перевірка: чи є назва категорії
+            if (name) {
+                const newCategory = {
+                    id: generateUniqueId(),
+                    name: name
+                };
+                categories.push(newCategory);
+                newCategoryInput.value = ''; // Очищення поля вводу
+                saveDataToLocal();
+                renderUI();
+                console.log(`Категорію "${name}" додано.`);
+            } else {
+                console.log("Назва категорії не може бути порожньою.");
+            }
+        }
+        // --- КІНЕЦЬ ФУНКЦІЇ ВИПРАВЛЕННЯ ---
+
+        function addMessage() {
+            const categoryId = categorySelect.value;
+            const contentEng = engInput.value.trim();
+            const contentUa = uaInput.value.trim();
+
+            if (categoryId && (contentEng || contentUa)) {
+                const newMessage = {
+                    id: generateUniqueId(),
+                    categoryId: categoryId,
+                    contentEng: contentEng,
+                    contentUa: contentUa,
+                };
+                messages.push(newMessage);
+
+                // Очищення полів
+                engInput.value = '';
+                uaInput.value = '';
+
+                saveDataToLocal();
+                renderUI();
+                console.log(`Повідомлення (UA/ENG) додано.`);
+            }
+        }
+
+
+        // --- 4. UI: Рендеринг та Обробники Подій ---
+
+        function updateButtonStates() {
+            const isCategorySelected = categorySelect.value !== "";
+            const isAnyContent = engInput.value.trim() !== "" || uaInput.value.trim() !== "";
+
+            // Кнопка "Додати Повідомлення" активна, якщо вибрана категорія І є хоча б один текст
+            addMessageBtn.disabled = !(isCategorySelected && isAnyContent);
+
+            // Кнопка "Перевести" активна, якщо є ENG текст
+            translateBtn.disabled = engInput.value.trim().length === 0 || spinner.classList.contains('animate-spin');
+        }
+
+        function renderUI() {
+            renderCategoryList();
+            renderCategorySelect();
+            renderMessages();
+            updateButtonStates(); // Оновлення стану кнопок
+
+            // Оновлення загальної кількості повідомлень
+            document.getElementById('all-messages-count').textContent = `(Усього ${messages.length})`;
+        }
+
+        function renderCategoryList() {
+            const listContainer = document.getElementById('category-list');
+            listContainer.innerHTML = '';
+
+            // Додати кнопку "Всі Повідомлення"
+            const allItem = document.createElement('div');
+            allItem.dataset.categoryId = 'all';
+            allItem.className = `category-item p-2 rounded-lg transition duration-150 cursor-pointer ${selectedCategoryId === 'all' ? 'selected-category' : ''}`;
+            allItem.innerHTML = `Всі Повідомлення <span class="text-xs ml-2 text-gray-500">(${messages.length})</span>`;
+            allItem.addEventListener('click', () => setSelectedCategory('all'));
+            listContainer.appendChild(allItem);
+
+            // Додати інші категорії
+            categories.forEach(cat => {
+                const messageCount = messages.filter(m => m.categoryId === cat.id).length;
+                const item = document.createElement('div');
+                item.dataset.categoryId = cat.id;
+                item.className = `category-item p-2 rounded-lg transition duration-150 cursor-pointer ${selectedCategoryId === cat.id ? 'selected-category' : ''}`;
+                item.innerHTML = `${cat.name} <span class="text-xs ml-2 text-gray-500">(${messageCount})</span>`;
+                item.addEventListener('click', () => setSelectedCategory(cat.id));
+                listContainer.appendChild(item);
+            });
+        }
+
+        function renderCategorySelect() {
+            const currentSelection = categorySelect.value;
+            categorySelect.innerHTML = '<option value="">Оберіть категорію</option>';
+
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.name;
+                categorySelect.appendChild(option);
+            });
+
+            // Відновлення попереднього вибору
+            if (currentSelection && categories.some(cat => cat.id === currentSelection)) {
+                categorySelect.value = currentSelection;
+            } else {
+                categorySelect.value = "";
+            }
+        }
+
+        function renderMessages() {
+            const listContainer = document.getElementById('message-list');
+            const header = document.getElementById('messages-header');
+            listContainer.innerHTML = '';
+
+            const filteredMessages = selectedCategoryId === 'all'
+                ? messages
+                : messages.filter(m => m.categoryId === selectedCategoryId);
+
+            const categoryName = selectedCategoryId === 'all'
+                ? 'Всі Повідомлення'
+                : categories.find(c => c.id === selectedCategoryId)?.name || 'Невідома Категорія';
+
+            header.textContent = `Повідомлення в категорії "${categoryName}" (${filteredMessages.length})`;
+
+            if (filteredMessages.length === 0) {
+                listContainer.innerHTML = '<p id="no-messages-msg" class="text-gray-500 italic">У цій категорії поки що немає повідомлень.</p>';
+                return;
+            }
+
+            filteredMessages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+
+                // ВАЖЛИВО: Додаємо клас copy-active для усунення конфліктів
+                messageDiv.className = 'message-item p-3 rounded-lg bg-gray-800/50 block transition duration-150 border-gray-700 hover:border-indigo-500/50 hover:shadow-lg';
+
+                // SVG для Іконки Видалення (Кошик)
+                const deleteSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.723-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 100 2v6a1 1 0 102 0V8a1 1 0 00-2 0z" clip-rule="evenodd" />
+                        </svg>`;
+
+                // Кнопка Видалення: маленька, з іконкою, абсолютне позиціонування
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'absolute top-3 right-3 text-red-400 hover:text-red-300 p-1 rounded-full bg-gray-700/50 hover:bg-gray-700 transition duration-150';
+                deleteButton.innerHTML = deleteSvg;
+                deleteButton.title = 'Видалити повідомлення';
+                deleteButton.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Запобігаємо копіюванню
+                    deleteMessage(msg.id);
+                });
+
+                // Компактний вміст
+                messageDiv.innerHTML = `
+                            <div class="space-y-1 pr-8"> <!-- Додано pr-8 для відступу під кнопку -->
+                                <!-- Англійський вміст (Оригінал) -->
+                                <p class="text-sm font-semibold text-gray-100 whitespace-pre-wrap">${msg.contentEng || '— (ENG: Немає)'}</p>
+
+                                <!-- Український вміст (Переклад) -->
+                                <p class="text-xs italic text-gray-400 whitespace-pre-wrap">${msg.contentUa || '— (UA: Немає)'}</p>
+                            </div>
+                        `;
+                messageDiv.appendChild(deleteButton); // Додати кнопку видалення
+
+                // Прив'язка копіювання до всього div. Копіюємо АНГЛІЙСЬКИЙ оригінал.
+                messageDiv.addEventListener('click', () => copyMessage(msg.contentEng, messageDiv));
+
+                listContainer.appendChild(messageDiv);
+            });
+        }
+
+        function setSelectedCategory(id) {
+            selectedCategoryId = id;
+            renderUI();
+        }
+
+        function deleteMessage(id) {
+            const index = messages.findIndex(m => m.id === id);
+            if (index !== -1) {
+                // Видалення повідомлення
+                messages.splice(index, 1);
+
+                // Перевірка: чи не залишилися категорії без повідомлень (і, можливо, їх видалення)
+                // Це не обов'язково, але для чистішого UI може бути корисним.
+                // Наразі просто оновлюємо UI, щоб відобразити нову кількість.
+
+                saveDataToLocal();
+                renderUI();
+            }
+        }
+
+        // Функція анімації копіювання, оновлена для кращого контролю hover-ефектів
+        function runCopyAnimation(element, isSuccess) {
+            const VISIBLE_DURATION = 900;
+            const FADE_DURATION = 300;
+
+            // 1. Временно отключаем ховер-эффекты
+            element.classList.add('copy-animation-active');
+
+            // 2. Добавляем зеленое свечение (используем кастомные классы)
+            if (isSuccess) {
+                element.classList.add('ring-green-animation');
+            } else {
+                element.classList.add('ring-red-animation');
+            }
+
+            // 3. Создаем оверлей
+            const overlay = document.createElement('div');
+            overlay.className = `absolute inset-0 flex items-center justify-center rounded-lg copy-overlay pointer-events-none ${isSuccess ? 'bg-gray-900/90' : 'bg-red-900/80'}`;
+            overlay.innerHTML = isSuccess
+                ? '<span class="text-4xl" style="color: #34D399;">✅</span>'
+                : '<span class="text-xl font-bold text-red-400">❌ Помилка: немає ENG тексту!</span>';
+
+            element.appendChild(overlay);
+
+            // 4. Запускаем таймер на восстановление
+            setTimeout(() => {
+                // Убираем свечение
+                element.classList.remove('ring-green-animation', 'ring-red-animation');
+
+                // Плавное исчезновение оверлея
+                if (element.contains(overlay)) {
+                    overlay.classList.add('hidden');
+
+                    setTimeout(() => {
+                        if (element.contains(overlay)) {
+                            element.removeChild(overlay);
+                        }
+                        // Восстанавливаем ховер-эффекты
+                        element.classList.remove('copy-animation-active');
+                    }, FADE_DURATION);
+                }
+            }, VISIBLE_DURATION);
+        }
+
+        function copyMessage(text, element) {
+            // 1. Обробка помилки: немає тексту для копіювання
+            if (!text || text.trim() === '— (ENG: Немає)') {
+                runCopyAnimation(element, false); // Помилка (Червоний ефект)
+                return;
+            }
+
+            // 2. Копіювання тексту (виконується миттєво)
+            const tempInput = document.createElement('textarea');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            // 3. Запуск успішної анімації
+            runCopyAnimation(element, true); // Успіх (Зелений ефект)
+        }
+
+        // --- Ініціалізація та Обробники Подій ---
+        function initApp() {
+            // 1. Отримання DOM елементів
+            engInput = document.getElementById('new-message-content-eng');
+            uaInput = document.getElementById('new-message-content-ua');
+            translateBtn = document.getElementById('gemini-translate-btn');
+            spinner = document.getElementById('gemini-spinner');
+            categorySelect = document.getElementById('category-select');
+            addMessageBtn = document.getElementById('add-message-btn');
+            newCategoryInput = document.getElementById('new-category-name'); // Отримання поля вводу
+            addCategoryBtn = document.getElementById('add-category-btn');     // Отримання кнопки
+
+            // 2. Завантаження даних та рендеринг UI
+            loadDataFromLocal();
+
+            // 3. Обробники для CRUD
+            // Тепер використовуємо addCategoryBtn, отриману вище
+            addCategoryBtn.addEventListener('click', addCategory);
+            document.getElementById('add-message-btn').addEventListener('click', addMessage);
+            document.getElementById('clear-all-data-btn').addEventListener('click', clearAllData);
+
+            // 4. Обробники для LLM та UI
+            categorySelect.addEventListener('change', updateButtonStates);
+            engInput.addEventListener('input', updateButtonStates);
+            uaInput.addEventListener('input', updateButtonStates);
+            translateBtn.addEventListener('click', generateTranslation);
+
+            // Приховуємо плейсхолдер UA, якщо є ключ
+            if (API_KEY === "") {
+                uaInput.placeholder = "Сюди буде додано переклад, або введіть його вручну (API ключ відсутній)";
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initApp);
+        document.getElementById('burgerBtn').addEventListener('click', function (e) {
+            e.stopPropagation();
+            const burgerContent = document.getElementById('burgerContent');
+            this.classList.toggle('active');
+            burgerContent.classList.toggle('show');
+        });
+
+        document.addEventListener('click', function (e) {
+            const burgerContent = document.getElementById('burgerContent');
+            const burgerBtn = document.getElementById('burgerBtn');
+            if (!burgerContent.contains(e.target) && !burgerBtn.contains(e.target)) {
+                burgerContent.classList.remove('show');
+                burgerBtn.classList.remove('active');
+            }
+        });
+
+        document.querySelectorAll('.burger-item').forEach(item => {
+            item.addEventListener('click', function () {
+                const burgerContent = document.getElementById('burgerContent');
+                const burgerBtn = document.getElementById('burgerBtn');
+                burgerContent.style.opacity = '0';
+                burgerContent.style.transform = 'translateY(-10px) scale(0.95)';
+                setTimeout(() => {
+                    burgerContent.classList.remove('show');
+                    burgerBtn.classList.remove('active');
+                    burgerContent.style.opacity = '';
+                    burgerContent.style.transform = '';
+                }, 300);
+            });
+        });
+
+        // ===== Анимация перехода между страницами =====
+        function navigateWithTransition(url) {
+            const transition = document.createElement('div');
+            transition.className = 'page-transition active';
+            document.body.appendChild(transition);
+            setTimeout(() => { window.location.href = url; }, 600);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const transition = document.querySelector('.page-transition');
+            if (transition) {
+                transition.classList.remove('active');
+                setTimeout(() => transition.remove(), 600);
+            }
+        });
+
+    </script>
+</body>
+</html>
