@@ -1138,35 +1138,25 @@
             setTimeout(() => transition.remove(), 600);
         }
     });
-        function deleteCategory(categoryId) {
-            // Предупреждение о том, что будут удалены ВСЕ сообщения в этой категории
-            if (!confirm("Вы уверены, что хотите удалить эту категорию? Все сообщения, связанные с ней, также будут удалены!")) {
-                return;
-            }
+        async function deleteCategory(categoryId) {
+    if (!confirm("Ви впевнені, що хочете видалити цю категорію? Всі повідомлення, пов'язані з нею, також будуть видалені!")) {
+        return;
+    }
 
-            // 1. Удаляем саму категорию
-            categories = categories.filter(cat => cat.id !== categoryId);
+    categories = categories.filter(cat => cat.id !== categoryId);
+    messages = messages.filter(msg => msg.categoryId !== categoryId);
 
-            // 2. Удаляем все сообщения, которые принадлежали этой категории
-            messages = messages.filter(msg => msg.categoryId !== categoryId);
-            
-            // 3. Сохраняем изменения локально, чтобы они не потерялись
-            saveDataToLocal(); 
+    if (selectedCategoryId === categoryId) {
+        selectedCategoryId = 'all';
+    }
 
-            // 4. Если удаленная категория была АКТИВНОЙ, сбрасываем фильтр на 'Всі'
-            // ИСПОЛЬЗУЕМ ПРАВИЛЬНУЮ ПЕРЕМЕННУЮ: selectedCategoryId
-            if (selectedCategoryId === categoryId) { 
-                // setSelectedCategory('all') сбросит ID и вызовет renderUI()
-                setSelectedCategory('all'); 
-                return; // Выходим, т.к. renderUI уже вызвана
-            }
-
-            // 5. Обновляем интерфейс (если активная категория не менялась)
-            renderUI();
-        }
+    await saveToGist();
+    renderUI();
+}
     </script>
 </body>
 </html>
+
 
 
 
