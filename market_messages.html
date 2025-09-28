@@ -956,13 +956,11 @@
             renderUI();
         }
 
-        function deleteMessage(id) {
-            const index = messages.findIndex(m => m.id === id);
-            if (index !== -1) {
-                messages.splice(index, 1);
-                saveDataToLocal();
-                renderUI();
-            }
+function deleteMessage(messageId) {
+            // 1. Фильтруем массив: оставляем все сообщения, кроме удаляемого
+            messages = messages.filter(msg => msg.id !== messageId);
+            saveDataToLocal(); 
+            renderUI();
         }
 
         function runCopyAnimation(element, isSuccess) {
@@ -1117,6 +1115,7 @@
     </script>
 </body>
 </html>
+
 
 
 
