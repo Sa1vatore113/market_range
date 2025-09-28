@@ -1096,21 +1096,27 @@
 
             // 1. Удаляем саму категорию
             categories = categories.filter(cat => cat.id !== categoryId);
-            
+
             // 2. Удаляем все сообщения, которые принадлежали этой категории
             messages = messages.filter(msg => msg.categoryId !== categoryId);
+            
+            // 3. Сохраняем изменения локально, чтобы они не потерялись
+            saveDataToLocal(); 
 
-            // 3. Если удаленная категория была активной, сбрасываем activeCategory
-            if (activeCategory === categoryId) {
-                activeCategory = null; // Сбрасываем фильтр
+            // 4. Если удаленная категория была АКТИВНОЙ, сбрасываем фильтр на 'Всі'
+            // ИСПОЛЬЗУЕМ ПРАВИЛЬНУЮ ПЕРЕМЕННУЮ: selectedCategoryId
+            if (selectedCategoryId === categoryId) { 
+                // setSelectedCategory('all') сбросит ID и вызовет renderUI()
+                setSelectedCategory('all'); 
+                return; // Выходим, т.к. renderUI уже вызвана
             }
 
-            // 4. Сохраняем изменения локально и обновляем интерфейс
-            saveDataToLocal(); 
-            renderUI(); 
+            // 5. Обновляем интерфейс (если активная категория не менялась)
+            renderUI();
         }
     </script>
 </body>
 </html>
+
 
 
