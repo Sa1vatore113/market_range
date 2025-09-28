@@ -1136,6 +1136,11 @@ document.addEventListener('DOMContentLoaded', initApp);
         console.error("❌ Помилка синхронізації з Gist:", error);
     }
 }
+ function forceReloadFromGist() {
+    console.log("🔄 Force reloading from Gist...");
+    loadData();
+}
+
         // --- ФУНКЦИЯ ЗАГРУЗКИ ДАННЫХ ИЗ GIST (ЧТЕНИЕ ДВУХ ФАЙЛОВ) ---
 async function loadData() {
     const GIST_BASE_URL = `https://gist.githubusercontent.com/${GITHUB_USERNAME}/${GIST_ID}/raw/`; 
@@ -1202,6 +1207,7 @@ async function loadData() {
     </script>
 </body>
 </html>
+
 
 
 
