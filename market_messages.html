@@ -632,302 +632,365 @@
     <!-- JavaScript Logic -->
     <!-- type="module" ПРИБРАНО, щоб дозволити локальний запуск (file://) -->
     <script>
-        // Видалено Firebase. Використовуємо localStorage.
+         // === КОНФИГУРАЦИЯ GIST ===
+    const GIST_ID = 'd69178844555b679725326d4174f0b7a';
+    const GITHUB_TOKEN = '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'; // Замените на ваш токен
+    const SYNC_ENABLED = true; // Включить/выключить синхронизацию
 
-        const CATEGORIES_KEY = 'messageCategories';
-        const MESSAGES_KEY = 'messages';
+    const CATEGORIES_KEY = 'messageCategories';
+    const MESSAGES_KEY = 'messages';
 
-        let categories = []; // [{id, name}]
-        let messages = []; // [{id, categoryId, contentEng, contentUa}]
-        let selectedCategoryId = 'all'; // Поточна обрана категорія
+    let categories = [];
+    let messages = [];
+    let selectedCategoryId = 'all';
+    let currentPage = 1;
+    const MESSAGES_PER_PAGE = 5;
 
-        // --- Пагінація ---
-        let currentPage = 1;
-        const MESSAGES_PER_PAGE = 5; // Кількість повідомлень на сторінці
+    // === DOM ЕЛЕМЕНТЫ ===
+    let engInput, uaInput, categorySelect, addMessageBtn, newCategoryInput, addCategoryBtn;
 
-        // --- DOM Елементи (Глобальні) ---
-        let engInput;
-        let uaInput;
-        let categorySelect;
-        let addMessageBtn;
-        let newCategoryInput;
-        let addCategoryBtn;
+    // === СИНХРОНИЗАЦИЯ С GIST ===
+    async function syncWithGist() {
+        if (!SYNC_ENABLED || !GIST_ID || !GITHUB_TOKEN) {
+            console.log('Синхронизация отключена - используем локальные данные');
+            loadFromLocalStorage();
+            return;
+        }
 
-        // --- 1. LOCAL STORAGE: Збереження та Завантаження ---
+        try {
+            console.log('Загружаем данные из Gist...');
+            const response = await fetch(`https://api.github.com/gists/${GIST_ID}`);
+            
+            if (!response.ok) throw new Error('Ошибка загрузки Gist');
+            
+            const gistData = await response.json();
+            
+            // Загружаем категории
+            if (gistData.files['categories.json']) {
+                const remoteCategories = JSON.parse(gistData.files['categories.json'].content);
+                categories = remoteCategories;
+                console.log('Категории загружены из Gist:', categories.length);
+            }
+            
+            // Загружаем сообщения
+            if (gistData.files['messages.json']) {
+                const remoteMessages = JSON.parse(gistData.files['messages.json'].content);
+                messages = remoteMessages;
+                console.log('Сообщения загружены из Gist:', messages.length);
+            }
+            
+            // Сохраняем в localStorage как резервную копию
+            saveToLocalStorage();
+            renderUI();
+            
+        } catch (error) {
+            console.error('Ошибка синхронизации с Gist:', error);
+            console.log('Используем локальные данные...');
+            loadFromLocalStorage();
+        }
+    }
 
-        async function loadData() {
-            try {
-                // 1. Пріоритет 1: Завантаження з Local Storage (зберігаємо локальні зміни)
-                const storedCategories = localStorage.getItem(CATEGORIES_KEY);
-                const storedMessages = localStorage.getItem(MESSAGES_KEY);
+    async function saveToGist() {
+        if (!SYNC_ENABLED || !GIST_ID || !GITHUB_TOKEN) {
+            saveToLocalStorage();
+            return;
+        }
 
-                if (storedCategories && storedMessages && storedCategories !== '[]') {
-                    // Якщо Local Storage НЕ порожній, використовуємо його!
-                    categories = JSON.parse(storedCategories);
-                    messages = JSON.parse(storedMessages);
-                    console.log("Дані завантажено з Local Storage (локальні зміни збережено).");
-
-                } else {
-                    // 2. Пріоритет 2: Local Storage порожній, завантажуємо спільні дані як БАЗУ
-                    console.warn("Local Storage порожній або містить лише [] (порожні). Завантаження общих даних.");
-                    const response = await fetch('shared_data.json');
-                    
-                    if (response.ok) {
-                        const sharedData = await response.json();
-                        
-                        categories = sharedData.categories || [];
-                        messages = sharedData.messages || [];
-                        
-                        // КРИТИЧНО: Зберігаємо загальні дані локально, щоб вони стали базою
-                        saveDataToLocal(); 
-                        console.log("Спільні дані успішно завантажено.");
-                        
-                    } else if (response.status === 404) {
-                        console.warn("Файл shared_data.json не знайдено. Початок роботи з чистими даними.");
-                        categories = [];
-                        messages = [];
-                    } else {
-                        throw new Error(`Помилка завантаження JSON: ${response.status}`);
+        try {
+            const gistData = {
+                files: {
+                    'categories.json': {
+                        content: JSON.stringify(categories, null, 2)
+                    },
+                    'messages.json': {
+                        content: JSON.stringify(messages, null, 2)
                     }
                 }
-
-            } catch (e) {
-                console.error("Критична помилка при завантаженні даних:", e);
-                categories = [];
-                messages = [];
-            } finally {
-                renderUI();
-            }
-        }
-
-        function saveDataToLocal() {
-            try {
-                localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
-                localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
-            } catch (e) {
-                console.error("Помилка збереження даних у Local Storage:", e);
-            }
-        }
-
-        function clearAllData() {
-            const result = window.prompt("Увага! Це повністю видалить усі дані (категорії та повідомлення) з вашого браузера. Для підтвердження введіть 'ОЧИСТИТИ'.");
-
-            if (result && result.toUpperCase() === 'ОЧИСТИТИ') {
-                localStorage.removeItem(CATEGORIES_KEY);
-                localStorage.removeItem(MESSAGES_KEY);
-                categories = [];
-                messages = [];
-                selectedCategoryId = 'all';
-                currentPage = 1;
-                renderUI();
-                console.log("Усі дані успішно видалено.");
-            } else if (result !== null) {
-                if (result.toUpperCase() !== 'ОЧИСТИТИ') {
-                    console.log("Дані не видалено. Введено неправильний код підтвердження.");
-                }
-            }
-        }
-
-        // --- 2. CRUD: Управління Даними ---
-
-        function generateUniqueId() {
-            return Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
-        }
-
-        function addCategory() {
-            const name = newCategoryInput.value.trim();
-
-            if (name) {
-                const newCategory = {
-                    id: generateUniqueId(),
-                    name: name
-                };
-                categories.push(newCategory);
-                newCategoryInput.value = '';
-                saveDataToLocal();
-                renderUI();
-                console.log(`Категорію "${name}" додано.`);
-            } else {
-                console.log("Назва категорії не може бути порожньою.");
-            }
-        }
-
-        function addMessage() {
-            const categoryId = categorySelect.value;
-            const contentEng = engInput.value.trim();
-            const contentUa = uaInput.value.trim();
-
-            if (categoryId && (contentEng || contentUa)) {
-                const newMessage = {
-                    id: generateUniqueId(),
-                    categoryId: categoryId,
-                    contentEng: contentEng,
-                    contentUa: contentUa,
-                };
-                messages.push(newMessage);
-
-                engInput.value = '';
-                uaInput.value = '';
-
-                saveDataToLocal();
-                renderUI();
-                console.log(`Повідомлення (UA/ENG) додано.`);
-            }
-        }
-
-        // --- 3. UI: Рендеринг та Обробники Подій ---
-
-        function updateButtonStates() {
-            const isCategorySelected = categorySelect.value !== "";
-            const isAnyContent = engInput.value.trim() !== "" || uaInput.value.trim() !== "";
-
-            addMessageBtn.disabled = !(isCategorySelected && isAnyContent);
-        }
-
-        function updateStatistics() {
-            document.getElementById('categories-count').textContent = categories.length;
-            document.getElementById('messages-total-count').textContent = messages.length;
-        }
-
-        function renderUI() {
-            renderCategoryList();
-            renderCategorySelect();
-            renderMessages();
-            updateButtonStates();
-            updateStatistics();
-
-            document.getElementById('all-messages-count').textContent = `(Усього ${messages.length})`;
-        }
-
-        function renderCategoryList() {
-            const listContainer = document.getElementById('category-list');
-            listContainer.innerHTML = '';
-
-            // --- 'Всі Повідомлення' Item (без кнопки удаления) ---
-            const allItemClass = `category-item p-2 rounded-lg transition duration-150 cursor-pointer flex justify-between items-center ${selectedCategoryId === 'all' ? 'selected-category' : ''}`;
+            };
             
-            // Здесь мы используем onclick на главном div, чтобы вся область была кликабельна
+            const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(gistData)
+            });
+            
+            if (!response.ok) throw new Error('Ошибка сохранения в Gist');
+            
+            console.log('✅ Данные сохранены в Gist');
+            saveToLocalStorage();
+            
+        } catch (error) {
+            console.error('❌ Ошибка сохранения в Gist:', error);
+            console.log('Сохраняем только локально...');
+            saveToLocalStorage();
+        }
+    }
+
+    // === LOCAL STORAGE ===
+    function saveToLocalStorage() {
+        try {
+            localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+            localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
+        } catch (e) {
+            console.error("Ошибка сохранения в localStorage:", e);
+        }
+    }
+
+    function loadFromLocalStorage() {
+        try {
+            const storedCategories = localStorage.getItem(CATEGORIES_KEY);
+            const storedMessages = localStorage.getItem(MESSAGES_KEY);
+
+            categories = storedCategories ? JSON.parse(storedCategories) : [];
+            messages = storedMessages ? JSON.parse(storedMessages) : [];
+            
+            renderUI();
+        } catch (e) {
+            console.error("Ошибка загрузки из localStorage:", e);
+            categories = [];
+            messages = [];
+            renderUI();
+        }
+    }
+
+    function clearAllData() {
+        const result = window.prompt("Увага! Це повністю видалить усі дані (категорії та повідомлення) з вашого браузера. Для підтвердження введіть 'ОЧИСТИТИ'.");
+
+        if (result && result.toUpperCase() === 'ОЧИСТИТИ') {
+            localStorage.removeItem(CATEGORIES_KEY);
+            localStorage.removeItem(MESSAGES_KEY);
+            categories = [];
+            messages = [];
+            selectedCategoryId = 'all';
+            currentPage = 1;
+            saveToGist(); // Также очищаем Gist
+            renderUI();
+            console.log("Усі дані успішно видалено.");
+        } else if (result !== null) {
+            if (result.toUpperCase() !== 'ОЧИСТИТИ') {
+                console.log("Дані не видалено. Введено неправильний код підтвердження.");
+            }
+        }
+    }
+
+    // === CRUD ОПЕРАЦИИ ===
+    function generateUniqueId() {
+        return Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
+    }
+
+    async function addCategory() {
+        const name = newCategoryInput.value.trim();
+
+        if (name) {
+            const newCategory = {
+                id: generateUniqueId(),
+                name: name,
+                createdAt: new Date().toISOString()
+            };
+            categories.push(newCategory);
+            newCategoryInput.value = '';
+            
+            await saveToGist();
+            renderUI();
+            
+            console.log(`✅ Категория "${name}" добавлена и синхронизирована`);
+        } else {
+            console.log("Назва категорії не може бути порожньою.");
+        }
+    }
+
+    async function addMessage() {
+        const categoryId = categorySelect.value;
+        const contentEng = engInput.value.trim();
+        const contentUa = uaInput.value.trim();
+
+        if (categoryId && (contentEng || contentUa)) {
+            const newMessage = {
+                id: generateUniqueId(),
+                categoryId: categoryId,
+                contentEng: contentEng,
+                contentUa: contentUa,
+                createdAt: new Date().toISOString()
+            };
+            messages.push(newMessage);
+
+            engInput.value = '';
+            uaInput.value = '';
+
+            await saveToGist();
+            renderUI();
+            
+            console.log(`✅ Сообщение добавлено и синхронизировано`);
+        }
+    }
+
+    async function deleteMessage(id) {
+        const index = messages.findIndex(m => m.id === id);
+        if (index !== -1) {
+            messages.splice(index, 1);
+            await saveToGist();
+            renderUI();
+        }
+    }
+
+    async function deleteCategory(categoryId) {
+        if (!confirm("Ви впевнені, що хочете видалити цю категорію? Всі повідомлення, пов'язані з нею, також будуть видалені!")) {
+            return;
+        }
+
+        categories = categories.filter(cat => cat.id !== categoryId);
+        messages = messages.filter(msg => msg.categoryId !== categoryId);
+
+        if (selectedCategoryId === categoryId) {
+            selectedCategoryId = 'all';
+        }
+
+        await saveToGist();
+        renderUI();
+    }
+
+    // === UI ФУНКЦИИ ===
+    function updateButtonStates() {
+        const isCategorySelected = categorySelect.value !== "";
+        const isAnyContent = engInput.value.trim() !== "" || uaInput.value.trim() !== "";
+        addMessageBtn.disabled = !(isCategorySelected && isAnyContent);
+    }
+
+    function updateStatistics() {
+        document.getElementById('categories-count').textContent = categories.length;
+        document.getElementById('messages-total-count').textContent = messages.length;
+    }
+
+    function renderUI() {
+        renderCategoryList();
+        renderCategorySelect();
+        renderMessages();
+        updateButtonStates();
+        updateStatistics();
+        document.getElementById('all-messages-count').textContent = `(Усього ${messages.length})`;
+    }
+
+    function renderCategoryList() {
+        const listContainer = document.getElementById('category-list');
+        listContainer.innerHTML = '';
+
+        const allItemClass = `category-item p-2 rounded-lg transition duration-150 cursor-pointer flex justify-between items-center ${selectedCategoryId === 'all' ? 'selected-category' : ''}`;
+
+        listContainer.innerHTML += `
+            <div class="${allItemClass}" onclick="setSelectedCategory('all')">
+                <span class="flex-grow">Всі Повідомлення</span>
+                <span class="text-xs ml-2 text-gray-500">(${messages.length})</span>
+            </div>
+        `;
+
+        categories.forEach(cat => {
+            const messageCount = messages.filter(m => m.categoryId === cat.id).length;
+            const itemClass = `category-item p-2 rounded-lg transition duration-150 cursor-pointer flex justify-between items-center ${selectedCategoryId === cat.id ? 'selected-category' : ''}`;
+
             listContainer.innerHTML += `
-                <div class="${allItemClass}" onclick="setSelectedCategory('all')">
-                    <span class="flex-grow">Всі Повідомлення</span> 
-                    <span class="text-xs ml-2 text-gray-500">(${messages.length})</span>
+                <div class="${itemClass}">
+                    <div class="flex-grow" onclick="setSelectedCategory('${cat.id}')">
+                        ${cat.name}
+                        <span class="text-xs ml-2 text-gray-500">(${messageCount})</span>
+                    </div>
+                    <button class="delete-category-btn text-gray-500 hover:text-red-500 transition-colors ml-2"
+                            onclick="event.stopPropagation(); deleteCategory('${cat.id}')" title="Видалити категорію">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
                 </div>
             `;
+        });
+    }
 
-            // --- Цикл для остальных Категорий (с кнопкой удаления) ---
-            categories.forEach(cat => {
-                const messageCount = messages.filter(m => m.categoryId === cat.id).length;
-                const itemClass = `category-item p-2 rounded-lg transition duration-150 cursor-pointer flex justify-between items-center ${selectedCategoryId === cat.id ? 'selected-category' : ''}`;
+    function renderCategorySelect() {
+        const currentSelection = categorySelect.value;
+        categorySelect.innerHTML = '<option value="">Оберіть категорію</option>';
 
-                listContainer.innerHTML += `
-                    <div class="${itemClass}">
-                        <div class="flex-grow" onclick="setSelectedCategory('${cat.id}')">
-                            ${cat.name} 
-                            <span class="text-xs ml-2 text-gray-500">(${messageCount})</span>
-                        </div>
-                        
-                        <button class="delete-category-btn text-gray-500 hover:text-red-500 transition-colors ml-2" 
-                                onclick="event.stopPropagation(); deleteCategory('${cat.id}')" title="Видалити категорію">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
-                    </div>
-                `;
-            });
+        categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.name;
+            categorySelect.appendChild(option);
+        });
+
+        if (currentSelection && categories.some(cat => cat.id === currentSelection)) {
+            categorySelect.value = currentSelection;
+        } else {
+            categorySelect.value = "";
+        }
+    }
+
+    function renderMessages() {
+        const listContainer = document.getElementById('message-list');
+        const header = document.getElementById('messages-header');
+        listContainer.innerHTML = '';
+
+        const filteredMessages = selectedCategoryId === 'all'
+            ? messages
+            : messages.filter(m => m.categoryId === selectedCategoryId);
+
+        const categoryName = selectedCategoryId === 'all'
+            ? 'Всі Повідомлення'
+            : categories.find(c => c.id === selectedCategoryId)?.name || 'Невідома Категорія';
+
+        const totalPages = Math.ceil(filteredMessages.length / MESSAGES_PER_PAGE);
+        currentPage = Math.min(currentPage, Math.max(1, totalPages));
+
+        const startIndex = (currentPage - 1) * MESSAGES_PER_PAGE;
+        const endIndex = startIndex + MESSAGES_PER_PAGE;
+        const paginatedMessages = filteredMessages.slice(startIndex, endIndex);
+
+        header.textContent = `Повідомлення в категорії "${categoryName}" (${filteredMessages.length})`;
+
+        if (paginatedMessages.length === 0) {
+            listContainer.innerHTML = '<p id="no-messages-msg" class="text-gray-500 italic">У цій категорії поки що немає повідомлень.</p>';
+            renderPaginationControls(filteredMessages.length, totalPages);
+            return;
         }
 
-        function renderCategorySelect() {
-            const currentSelection = categorySelect.value;
-            categorySelect.innerHTML = '<option value="">Оберіть категорію</option>';
+        paginatedMessages.forEach(msg => {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message-item p-3 rounded-lg bg-gray-800/50 block transition duration-150 border-gray-700 hover:border-indigo-500/50 hover:shadow-lg relative';
 
-            categories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat.id;
-                option.textContent = cat.name;
-                categorySelect.appendChild(option);
+            const deleteSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.723-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 100 2v6a1 1 0 102 0V8a1 1 0 00-2 0z" clip-rule="evenodd" />
+            </svg>`;
+
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'absolute top-3 right-3 text-red-400 hover:text-red-300 p-1 rounded-full bg-gray-700/50 hover:bg-gray-700 transition duration-150';
+            deleteButton.innerHTML = deleteSvg;
+            deleteButton.title = 'Видалити повідомлення';
+            deleteButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteMessage(msg.id);
             });
 
-            if (currentSelection && categories.some(cat => cat.id === currentSelection)) {
-                categorySelect.value = currentSelection;
-            } else {
-                categorySelect.value = "";
-            }
-        }
-
-        function renderMessages() {
-            const listContainer = document.getElementById('message-list');
-            const header = document.getElementById('messages-header');
-            listContainer.innerHTML = '';
-
-            const filteredMessages = selectedCategoryId === 'all'
-                ? messages
-                : messages.filter(m => m.categoryId === selectedCategoryId);
-
-            const categoryName = selectedCategoryId === 'all'
-                ? 'Всі Повідомлення'
-                : categories.find(c => c.id === selectedCategoryId)?.name || 'Невідома Категорія';
-
-            // Пагінація
-            const totalPages = Math.ceil(filteredMessages.length / MESSAGES_PER_PAGE);
-            currentPage = Math.min(currentPage, Math.max(1, totalPages));
-
-            const startIndex = (currentPage - 1) * MESSAGES_PER_PAGE;
-            const endIndex = startIndex + MESSAGES_PER_PAGE;
-            const paginatedMessages = filteredMessages.slice(startIndex, endIndex);
-
-            header.textContent = `Повідомлення в категорії "${categoryName}" (${filteredMessages.length})`;
-
-            if (paginatedMessages.length === 0) {
-                listContainer.innerHTML = '<p id="no-messages-msg" class="text-gray-500 italic">У цій категорії поки що немає повідомлень.</p>';
-                renderPaginationControls(filteredMessages.length, totalPages);
-                return;
-            }
-
-            paginatedMessages.forEach(msg => {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message-item p-3 rounded-lg bg-gray-800/50 block transition duration-150 border-gray-700 hover:border-indigo-500/50 hover:shadow-lg relative';
-
-                const deleteSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.723-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 100 2v6a1 1 0 102 0V8a1 1 0 00-2 0z" clip-rule="evenodd" />
-                </svg>`;
-
-                const deleteButton = document.createElement('button');
-                deleteButton.className = 'absolute top-3 right-3 text-red-400 hover:text-red-300 p-1 rounded-full bg-gray-700/50 hover:bg-gray-700 transition duration-150';
-                deleteButton.innerHTML = deleteSvg;
-                deleteButton.title = 'Видалити повідомлення';
-                deleteButton.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    deleteMessage(msg.id);
-                });
-
-                messageDiv.innerHTML = `
+            messageDiv.innerHTML = `
                 <div class="space-y-1 pr-8">
                     <p class="text-sm font-semibold text-gray-100 whitespace-pre-wrap">${msg.contentEng || '— (ENG: Немає)'}</p>
                     <p class="text-xs italic text-gray-400 whitespace-pre-wrap">${msg.contentUa || '— (UA: Немає)'}</p>
                 </div>
             `;
-                messageDiv.appendChild(deleteButton);
-                messageDiv.addEventListener('click', () => copyMessage(msg.contentEng, messageDiv));
-                listContainer.appendChild(messageDiv);
-            });
+            messageDiv.appendChild(deleteButton);
+            messageDiv.addEventListener('click', () => copyMessage(msg.contentEng, messageDiv));
+            listContainer.appendChild(messageDiv);
+        });
 
-            renderPaginationControls(filteredMessages.length, totalPages);
-        }
+        renderPaginationControls(filteredMessages.length, totalPages);
+    }
 
-        // --- Нова функція для пагінації ---
-        function renderPaginationControls(totalMessages, totalPages) {
-            const listContainer = document.getElementById('message-list');
+    function renderPaginationControls(totalMessages, totalPages) {
+        const listContainer = document.getElementById('message-list');
+        const oldPagination = listContainer.querySelector('.pagination-controls');
+        if (oldPagination) oldPagination.remove();
 
-            // Видаляємо стару пагінацію, якщо вона є
-            const oldPagination = listContainer.querySelector('.pagination-controls');
-            if (oldPagination) {
-                oldPagination.remove();
-            }
-
-            if (totalMessages > MESSAGES_PER_PAGE) {
-                const paginationDiv = document.createElement('div');
-                paginationDiv.className = 'pagination-controls';
-
-                paginationDiv.innerHTML = `
+        if (totalMessages > MESSAGES_PER_PAGE) {
+            const paginationDiv = document.createElement('div');
+            paginationDiv.className = 'pagination-controls';
+            paginationDiv.innerHTML = `
                 <button class="pagination-btn" id="prev-page" ${currentPage === 1 ? 'disabled' : ''}>
                     ← Попередня
                 </button>
@@ -938,162 +1001,143 @@
                     Наступна →
                 </button>
             `;
+            listContainer.appendChild(paginationDiv);
 
-                listContainer.appendChild(paginationDiv);
-
-                // Додаємо обробники подій
-                document.getElementById('prev-page').addEventListener('click', () => {
-                    if (currentPage > 1) {
-                        currentPage--;
-                        renderMessages();
-                    }
-                });
-
-                document.getElementById('next-page').addEventListener('click', () => {
-                    if (currentPage < totalPages) {
-                        currentPage++;
-                        renderMessages();
-                    }
-                });
-            }
-        }
-
-        function setSelectedCategory(id) {
-            selectedCategoryId = id;
-            currentPage = 1; // Скидаємо на першу сторінку при зміні категорії
-            renderUI();
-        }
-
-function deleteMessage(messageId) {
-            // 1. Фильтруем массив: оставляем все сообщения, кроме удаляемого
-            messages = messages.filter(msg => msg.id !== messageId);
-            saveDataToLocal(); 
-            renderUI();
-        }
-
-        function runCopyAnimation(element, isSuccess) {
-            const VISIBLE_DURATION = 900;
-            const FADE_DURATION = 300;
-
-            element.classList.add('copy-animation-active');
-
-            if (isSuccess) {
-                element.classList.add('ring-green-animation');
-            } else {
-                element.classList.add('ring-red-animation');
-            }
-
-            const overlay = document.createElement('div');
-            overlay.className = `absolute inset-0 flex items-center justify-center rounded-lg copy-overlay pointer-events-none ${isSuccess ? 'bg-gray-900/90' : 'bg-red-900/80'}`;
-            overlay.innerHTML = isSuccess
-                ? '<span class="text-4xl" style="color: #34D399;">✅</span>'
-                : '<span class="text-xl font-bold text-red-400">❌ Помилка: немає ENG тексту!</span>';
-
-            element.appendChild(overlay);
-
-            setTimeout(() => {
-                element.classList.remove('ring-green-animation', 'ring-red-animation');
-
-                if (element.contains(overlay)) {
-                    overlay.classList.add('hidden');
-
-                    setTimeout(() => {
-                        if (element.contains(overlay)) {
-                            element.removeChild(overlay);
-                        }
-                        element.classList.remove('copy-animation-active');
-                    }, FADE_DURATION);
+            document.getElementById('prev-page').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderMessages();
                 }
-            }, VISIBLE_DURATION);
-        }
+            });
 
-        function copyMessage(text, element) {
-            if (!text || text.trim() === '— (ENG: Немає)') {
-                runCopyAnimation(element, false);
-                return;
+            document.getElementById('next-page').addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderMessages();
+                }
+            });
+        }
+    }
+
+    function setSelectedCategory(id) {
+        selectedCategoryId = id;
+        currentPage = 1;
+        renderUI();
+    }
+
+    function runCopyAnimation(element, isSuccess) {
+        const VISIBLE_DURATION = 900;
+        const FADE_DURATION = 300;
+
+        element.classList.add('copy-animation-active');
+        element.classList.add(isSuccess ? 'ring-green-animation' : 'ring-red-animation');
+
+        const overlay = document.createElement('div');
+        overlay.className = `absolute inset-0 flex items-center justify-center rounded-lg copy-overlay pointer-events-none ${isSuccess ? 'bg-gray-900/90' : 'bg-red-900/80'}`;
+        overlay.innerHTML = isSuccess
+            ? '<span class="text-4xl" style="color: #34D399;">✅</span>'
+            : '<span class="text-xl font-bold text-red-400">❌ Помилка: немає ENG тексту!</span>';
+
+        element.appendChild(overlay);
+
+        setTimeout(() => {
+            element.classList.remove('ring-green-animation', 'ring-red-animation');
+            if (element.contains(overlay)) {
+                overlay.classList.add('hidden');
+                setTimeout(() => {
+                    if (element.contains(overlay)) element.removeChild(overlay);
+                    element.classList.remove('copy-animation-active');
+                }, FADE_DURATION);
             }
+        }, VISIBLE_DURATION);
+    }
 
-            const tempInput = document.createElement('textarea');
-            tempInput.value = text;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-
-            runCopyAnimation(element, true);
+    function copyMessage(text, element) {
+        if (!text || text.trim() === '— (ENG: Немає)') {
+            runCopyAnimation(element, false);
+            return;
         }
 
-        // --- Ініціалізація та Обробники Подій ---
-        function initApp() {
-            engInput = document.getElementById('new-message-content-eng');
-            uaInput = document.getElementById('new-message-content-ua');
-            categorySelect = document.getElementById('category-select');
-            addMessageBtn = document.getElementById('add-message-btn');
-            newCategoryInput = document.getElementById('new-category-name');
-            addCategoryBtn = document.getElementById('add-category-btn');
+        const tempInput = document.createElement('textarea');
+        tempInput.value = text;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        runCopyAnimation(element, true);
+    }
 
-            loadData();
+    // === ИНИЦИАЛИЗАЦИЯ ===
+    async function initApp() {
+        engInput = document.getElementById('new-message-content-eng');
+        uaInput = document.getElementById('new-message-content-ua');
+        categorySelect = document.getElementById('category-select');
+        addMessageBtn = document.getElementById('add-message-btn');
+        newCategoryInput = document.getElementById('new-category-name');
+        addCategoryBtn = document.getElementById('add-category-btn');
 
-            addCategoryBtn.addEventListener('click', addCategory);
-            document.getElementById('add-message-btn').addEventListener('click', addMessage);
-            document.getElementById('clear-all-data-btn').addEventListener('click', clearAllData);
+        await syncWithGist();
 
-            categorySelect.addEventListener('change', updateButtonStates);
-            engInput.addEventListener('input', updateButtonStates);
-            uaInput.addEventListener('input', updateButtonStates);
+        addCategoryBtn.addEventListener('click', addCategory);
+        addMessageBtn.addEventListener('click', addMessage);
+        document.getElementById('clear-all-data-btn').addEventListener('click', clearAllData);
 
-            uaInput.placeholder = "Сюди буде додано переклад, або введіть його вручну";
+        categorySelect.addEventListener('change', updateButtonStates);
+        engInput.addEventListener('input', updateButtonStates);
+        uaInput.addEventListener('input', updateButtonStates);
+
+        uaInput.placeholder = "Сюди буде додано переклад, або введіть його вручну";
+    }
+
+    document.addEventListener('DOMContentLoaded', initApp);
+
+    // Бургер-меню
+    document.getElementById('burgerBtn').addEventListener('click', function (e) {
+        e.stopPropagation();
+        const burgerContent = document.getElementById('burgerContent');
+        this.classList.toggle('active');
+        burgerContent.classList.toggle('show');
+    });
+
+    document.addEventListener('click', function (e) {
+        const burgerContent = document.getElementById('burgerContent');
+        const burgerBtn = document.getElementById('burgerBtn');
+        if (!burgerContent.contains(e.target) && !burgerBtn.contains(e.target)) {
+            burgerContent.classList.remove('show');
+            burgerBtn.classList.remove('active');
         }
+    });
 
-        document.addEventListener('DOMContentLoaded', initApp);
-
-        // Бургер-меню
-        document.getElementById('burgerBtn').addEventListener('click', function (e) {
-            e.stopPropagation();
-            const burgerContent = document.getElementById('burgerContent');
-            this.classList.toggle('active');
-            burgerContent.classList.toggle('show');
-        });
-
-        document.addEventListener('click', function (e) {
+    document.querySelectorAll('.burger-item').forEach(item => {
+        item.addEventListener('click', function () {
             const burgerContent = document.getElementById('burgerContent');
             const burgerBtn = document.getElementById('burgerBtn');
-            if (!burgerContent.contains(e.target) && !burgerBtn.contains(e.target)) {
+            burgerContent.style.opacity = '0';
+            burgerContent.style.transform = 'translateY(-10px) scale(0.95)';
+            setTimeout(() => {
                 burgerContent.classList.remove('show');
                 burgerBtn.classList.remove('active');
-            }
+                burgerContent.style.opacity = '';
+                burgerContent.style.transform = '';
+            }, 300);
         });
+    });
 
-        document.querySelectorAll('.burger-item').forEach(item => {
-            item.addEventListener('click', function () {
-                const burgerContent = document.getElementById('burgerContent');
-                const burgerBtn = document.getElementById('burgerBtn');
-                burgerContent.style.opacity = '0';
-                burgerContent.style.transform = 'translateY(-10px) scale(0.95)';
-                setTimeout(() => {
-                    burgerContent.classList.remove('show');
-                    burgerBtn.classList.remove('active');
-                    burgerContent.style.opacity = '';
-                    burgerContent.style.transform = '';
-                }, 300);
-            });
-        });
+    // Анимация перехода между страницами
+    function navigateWithTransition(url) {
+        const transition = document.createElement('div');
+        transition.className = 'page-transition active';
+        document.body.appendChild(transition);
+        setTimeout(() => { window.location.href = url; }, 600);
+    }
 
-        // Анимация перехода между страницами
-        function navigateWithTransition(url) {
-            const transition = document.createElement('div');
-            transition.className = 'page-transition active';
-            document.body.appendChild(transition);
-            setTimeout(() => { window.location.href = url; }, 600);
+    document.addEventListener('DOMContentLoaded', function () {
+        const transition = document.querySelector('.page-transition');
+        if (transition) {
+            transition.classList.remove('active');
+            setTimeout(() => transition.remove(), 600);
         }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            const transition = document.querySelector('.page-transition');
-            if (transition) {
-                transition.classList.remove('active');
-                setTimeout(() => transition.remove(), 600);
-            }
-        });
+    });
         function deleteCategory(categoryId) {
             // Предупреждение о том, что будут удалены ВСЕ сообщения в этой категории
             if (!confirm("Вы уверены, что хотите удалить эту категорию? Все сообщения, связанные с ней, также будут удалены!")) {
@@ -1123,6 +1167,7 @@ function deleteMessage(messageId) {
     </script>
 </body>
 </html>
+
 
 
 
