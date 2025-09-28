@@ -660,6 +660,8 @@ const MESSAGES_PER_PAGE = 5;
     async function saveToGist() {
     const dataToSave = { categories, messages };
     
+    console.log("🔄 Starting save to Gist...");
+    
     try {
         const response = await fetch('/.netlify/functions/update-gist', {
             method: 'POST',
@@ -667,16 +669,24 @@ const MESSAGES_PER_PAGE = 5;
             body: JSON.stringify(dataToSave)
         });
 
+        console.log("Response status:", response.status);
+        console.log("Response ok:", response.ok);
+
         if (response.ok) {
-            console.log("Дані успішно збережено через проксі-сервер.");
+            const result = await response.json();
+            console.log("✅ Data saved successfully:", result);
+            alert("✅ Дані успішно збережено!");
         } else {
-            console.error("Помилка збереження на Gist через проксі:", response.status, await response.text());
-            alert("Помилка: Не вдалося зберегти зміни на Gist. Перевірте лог сервера Netlify.");
+            const errorText = await response.text();
+            console.error("❌ Save error:", response.status, errorText);
+            alert(`❌ Помилка збереження: ${response.status} - ${errorText}`);
         }
     } catch (error) {
-        console.error("Мережева помилка при виклику проксі-сервера:", error);
+        console.error("🚨 Network error:", error);
+        alert("🚨 Мережева помилка: " + error.message);
     }
 }
+
 
     // === LOCAL STORAGE ===
     function saveToLocalStorage() {
@@ -1128,6 +1138,7 @@ async function loadData() {
     </script>
 </body>
 </html>
+
 
 
 
