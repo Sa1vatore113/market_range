@@ -671,68 +671,38 @@ const MESSAGES_PER_PAGE = 5;
 
         if (response.ok) {
             console.log("✅ Data saved to Gist");
-            // НЕ сохраняем в localStorage - используем только Gist
         } else {
-            console.error("❌ Failed to save to Gist:", response.status);
-            // В случае ошибки сохраняем в localStorage
-            localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
-            localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
-            console.log("💾 Data saved to localStorage as backup");
+            const errorText = await response.text();
+            console.error("❌ Failed to save to Gist:", response.status, errorText);
+            throw new Error(`Save failed: ${response.status}`);
         }
     } catch (error) {
-        console.error("❌ Network error:", error);
-        // Сетевая ошибка - сохраняем в localStorage
-        localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
-        localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
-        console.log("💾 Data saved to localStorage as backup");
+        console.error("❌ Save error:", error);
+        throw error; // Пробрасываем ошибку дальше
     }
 }
     // === LOCAL STORAGE ===
-    function saveToLocalStorage() {
-    try {
-        localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
-        localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
-        console.log("💾 Data saved to localStorage");
-    } catch (e) {
-        console.error("❌ Error saving to localStorage:", e);
-    }
-}
+    function clearAllData() {
+    const result = window.prompt("Увага! Це повністю видалить усі дані з Gist. Для підтвердження введіть 'ОЧИСТИТИ'.");
 
-function loadFromLocalStorage() {
-    try {
-        const storedCategories = localStorage.getItem(CATEGORIES_KEY);
-        const storedMessages = localStorage.getItem(MESSAGES_KEY);
-
-        categories = storedCategories ? JSON.parse(storedCategories) : [];
-        messages = storedMessages ? JSON.parse(storedMessages) : [];
-        
-        console.log("📥 Data loaded from localStorage");
-    } catch (e) {
-        console.error("❌ Error loading from localStorage:", e);
+    if (result && result.toUpperCase() === 'ОЧИСТИТИ') {
         categories = [];
         messages = [];
+        selectedCategoryId = 'all';
+        currentPage = 1;
+        
+        // Немедленно обновляем UI
+        renderUI();
+        
+        // Сохраняем пустые данные в Gist
+        saveToGist().then(() => {
+            console.log("✅ All data cleared from Gist");
+        }).catch(error => {
+            console.error("❌ Failed to clear Gist:", error);
+            alert("❌ Не вдалося очистити дані з Gist.");
+        });
     }
 }
-    function clearAllData() {
-        const result = window.prompt("Увага! Це повністю видалить усі дані (категорії та повідомлення) з вашого браузера. Для підтвердження введіть 'ОЧИСТИТИ'.");
-
-        if (result && result.toUpperCase() === 'ОЧИСТИТИ') {
-            localStorage.removeItem(CATEGORIES_KEY);
-            localStorage.removeItem(MESSAGES_KEY);
-            categories = [];
-            messages = [];
-            selectedCategoryId = 'all';
-            currentPage = 1;
-            saveToGist(); // Также очищаем Gist
-            renderUI();
-            console.log("Усі дані успішно видалено.");
-        } else if (result !== null) {
-            if (result.toUpperCase() !== 'ОЧИСТИТИ') {
-                console.log("Дані не видалено. Введено неправильний код підтвердження.");
-            }
-        }
-    }
-
     // === CRUD ОПЕРАЦИИ ===
     function generateUniqueId() {
         return Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
@@ -757,19 +727,21 @@ function loadFromLocalStorage() {
     };
     
     categories.push(newCategory);
-    newCategoryInput.value = ''; // Очистка поля ввода
+    newCategoryInput.value = '';
     
-    // ВАЖНО: Сначала сохраняем в localStorage для мгновенного отображения
-    saveToLocalStorage();
-    renderUI(); // Немедленно обновляем интерфейс
+    // Немедленно обновляем UI
+    renderUI();
     
-    // Затем синхронизируем с Gist (в фоне)
+    // Сохраняем в Gist
     try {
         await saveToGist();
-        console.log(`✅ Категорію "${name}" додано та синхронізовано з Gist`);
+        console.log(`✅ Category "${name}" added`);
     } catch (error) {
-        console.error("❌ Помилка синхронізації з Gist:", error);
-        // Но данные уже в localStorage и отображены
+        console.error("❌ Failed to save category:", error);
+        // Откатываем изменения в UI
+        categories = categories.filter(cat => cat.id !== newCategory.id);
+        renderUI();
+        alert("❌ Не вдалося зберегти категорію. Спробуйте ще раз.");
     }
 }
     async function addMessage() {
@@ -785,21 +757,27 @@ function loadFromLocalStorage() {
             contentUa: contentUa,
             createdAt: new Date().toISOString()
         };
+        
+        // Сохраняем временную копию для отката
+        const originalMessages = [...messages];
+        
         messages.push(newMessage);
-
         engInput.value = '';
         uaInput.value = '';
 
-        // ВАЖНО: Сначала сохраняем в localStorage
-        saveToLocalStorage();
-        renderUI(); // Немедленно обновляем интерфейс
+        // Немедленно обновляем UI
+        renderUI();
         
-        // Затем синхронизируем с Gist
+        // Сохраняем в Gist
         try {
             await saveToGist();
-            console.log(`✅ Повідомлення додано та синхронізовано з Gist`);
+            console.log(`✅ Message added`);
         } catch (error) {
-            console.error("❌ Помилка синхронізації з Gist:", error);
+            console.error("❌ Failed to save message:", error);
+            // Откатываем изменения
+            messages = originalMessages;
+            renderUI();
+            alert("❌ Не вдалося зберегти повідомлення. Спробуйте ще раз.");
         }
     }
 }
@@ -1145,68 +1123,50 @@ document.addEventListener('DOMContentLoaded', initApp);
 async function loadData() {
     const GIST_BASE_URL = `https://gist.githubusercontent.com/${GITHUB_USERNAME}/${GIST_ID}/raw/`; 
     
-    console.log("🔄 Starting data load from Gist...");
+    console.log("🔄 Loading data from Gist...");
 
     try {
         // Загружаем данные из Gist
         const [categoriesResponse, messagesResponse] = await Promise.all([
-            fetch(GIST_BASE_URL + 'categories.json?t=' + Date.now()), // Добавляем timestamp чтобы избежать кеша
+            fetch(GIST_BASE_URL + 'categories.json?t=' + Date.now()),
             fetch(GIST_BASE_URL + 'messages.json?t=' + Date.now())
         ]);
 
-        console.log("Categories response:", categoriesResponse.status);
-        console.log("Messages response:", messagesResponse.status);
+        console.log("Gist responses:", {
+            categories: categoriesResponse.status,
+            messages: messagesResponse.status
+        });
 
         // Обрабатываем категории
         if (categoriesResponse.ok) {
-            const gistCategories = await categoriesResponse.json();
-            categories = gistCategories;
-            console.log("✅ Categories loaded from Gist:", categories.length);
+            categories = await categoriesResponse.json();
+            console.log("✅ Categories loaded:", categories.length);
         } else {
-            console.warn("❌ Failed to load categories from Gist");
+            console.warn("❌ Failed to load categories");
             categories = [];
         }
 
         // Обрабатываем сообщения
         if (messagesResponse.ok) {
-            const gistMessages = await messagesResponse.json();
-            messages = gistMessages;
-            console.log("✅ Messages loaded from Gist:", messages.length);
+            messages = await messagesResponse.json();
+            console.log("✅ Messages loaded:", messages.length);
         } else {
-            console.warn("❌ Failed to load messages from Gist");
+            console.warn("❌ Failed to load messages");
             messages = [];
         }
-
-        // ВАЖНО: НЕ используем localStorage как резерв
-        console.log("🎯 Using ONLY Gist data, ignoring localStorage");
 
     } catch (e) {
-        console.error("❌ Critical error loading from Gist:", e);
-        // В случае ошибки пробуем загрузить из localStorage
-        try {
-            const storedCategories = localStorage.getItem(CATEGORIES_KEY);
-            const storedMessages = localStorage.getItem(MESSAGES_KEY);
-            
-            if (storedCategories) categories = JSON.parse(storedCategories);
-            if (storedMessages) messages = JSON.parse(storedMessages);
-            
-            console.log("🔄 Loaded from localStorage as fallback");
-        } catch (localError) {
-            console.error("❌ Also failed to load from localStorage:", localError);
-            categories = [];
-            messages = [];
-        }
+        console.error("❌ Error loading from Gist:", e);
+        categories = [];
+        messages = [];
     } finally {
-        console.log("📊 Final data state:", {
-            categories: categories.length,
-            messages: messages.length
-        });
         renderUI();
     }
 }
     </script>
 </body>
 </html>
+
 
 
 
