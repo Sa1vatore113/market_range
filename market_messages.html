@@ -639,19 +639,39 @@
 
         // --- 1. LOCAL STORAGE: Збереження та Завантаження ---
 
-        function loadDataFromLocal() {
+        async function loadData() {
             try {
-                const storedCategories = localStorage.getItem(CATEGORIES_KEY);
-                const storedMessages = localStorage.getItem(MESSAGES_KEY);
+                // 1. Попытка загрузить общие данные из JSON файла (для всех пользователей)
+                const response = await fetch('shared_data.json');
+                if (response.ok) {
+                    const sharedData = await response.json();
+                    
+                    // Загружаем общие данные как основные
+                    categories = sharedData.categories || [];
+                    messages = sharedData.messages || [];
+                    
+                    console.log("Данные загружены из shared_data.json (общий доступ).");
 
-                categories = storedCategories ? JSON.parse(storedCategories) : [];
-                messages = storedMessages ? JSON.parse(storedMessages) : [];
+                } else if (response.status === 404) {
+                    // 2. Если общий файл не найден, загружаем локальные данные
+                    console.warn("Файл shared_data.json не найден. Загрузка данных из Local Storage (локальный доступ).");
+                    const storedCategories = localStorage.getItem(CATEGORIES_KEY);
+                    const storedMessages = localStorage.getItem(MESSAGES_KEY);
 
-                renderUI();
+                    categories = storedCategories ? JSON.parse(storedCategories) : [];
+                    messages = storedMessages ? JSON.parse(storedMessages) : [];
+                    
+                } else {
+                     // 3. Другая ошибка (например, CORS или сеть)
+                    throw new Error(`Ошибка загрузки JSON: ${response.status}`);
+                }
+
             } catch (e) {
-                console.error("Помилка завантаження даних з Local Storage:", e);
+                console.error("Критическая ошибка при загрузке данных:", e);
+                // На случай сбоя, инициализируем пустые массивы
                 categories = [];
                 messages = [];
+            } finally {
                 renderUI();
             }
         }
@@ -976,7 +996,7 @@
             newCategoryInput = document.getElementById('new-category-name');
             addCategoryBtn = document.getElementById('add-category-btn');
 
-            loadDataFromLocal();
+            loadData();
 
             addCategoryBtn.addEventListener('click', addCategory);
             document.getElementById('add-message-btn').addEventListener('click', addMessage);
@@ -1041,3 +1061,4 @@
     </script>
 </body>
 </html>
+
