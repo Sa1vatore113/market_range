@@ -465,6 +465,22 @@
             font-size: 0.9em;
             color: var(--text-muted);
         }
+        .delete-category-btn {
+            padding: 0 5px; /* Немного отступа для лучшего клика */
+            flex-shrink: 0; /* Гарантируем, что кнопка не будет сжиматься */
+        }
+
+        .category-item {
+            /* Убедитесь, что div-контейнер категории использует flex */
+            display: flex;
+            align-items: center;
+        }
+
+        .category-item > div:first-child {
+            /* Блок текста категории должен занимать все доступное пространство, кроме кнопки */
+            flex-grow: 1;
+            padding-right: 10px; /* Отступ между текстом и корзиной */
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -779,21 +795,35 @@
             const listContainer = document.getElementById('category-list');
             listContainer.innerHTML = '';
 
-            const allItem = document.createElement('div');
-            allItem.dataset.categoryId = 'all';
-            allItem.className = `category-item p-2 rounded-lg transition duration-150 cursor-pointer ${selectedCategoryId === 'all' ? 'selected-category' : ''}`;
-            allItem.innerHTML = `Всі Повідомлення <span class="text-xs ml-2 text-gray-500">(${messages.length})</span>`;
-            allItem.addEventListener('click', () => setSelectedCategory('all'));
-            listContainer.appendChild(allItem);
+            // --- 'Всі Повідомлення' Item (без кнопки удаления) ---
+            const allItemClass = `category-item p-2 rounded-lg transition duration-150 cursor-pointer flex justify-between items-center ${selectedCategoryId === 'all' ? 'selected-category' : ''}`;
+            
+            // Здесь мы используем onclick на главном div, чтобы вся область была кликабельна
+            listContainer.innerHTML += `
+                <div class="${allItemClass}" onclick="setSelectedCategory('all')">
+                    <span class="flex-grow">Всі Повідомлення</span> 
+                    <span class="text-xs ml-2 text-gray-500">(${messages.length})</span>
+                </div>
+            `;
 
+            // --- Цикл для остальных Категорий (с кнопкой удаления) ---
             categories.forEach(cat => {
                 const messageCount = messages.filter(m => m.categoryId === cat.id).length;
-                const item = document.createElement('div');
-                item.dataset.categoryId = cat.id;
-                item.className = `category-item p-2 rounded-lg transition duration-150 cursor-pointer ${selectedCategoryId === cat.id ? 'selected-category' : ''}`;
-                item.innerHTML = `${cat.name} <span class="text-xs ml-2 text-gray-500">(${messageCount})</span>`;
-                item.addEventListener('click', () => setSelectedCategory(cat.id));
-                listContainer.appendChild(item);
+                const itemClass = `category-item p-2 rounded-lg transition duration-150 cursor-pointer flex justify-between items-center ${selectedCategoryId === cat.id ? 'selected-category' : ''}`;
+
+                listContainer.innerHTML += `
+                    <div class="${itemClass}">
+                        <div class="flex-grow" onclick="setSelectedCategory('${cat.id}')">
+                            ${cat.name} 
+                            <span class="text-xs ml-2 text-gray-500">(${messageCount})</span>
+                        </div>
+                        
+                        <button class="delete-category-btn text-gray-500 hover:text-red-500 transition-colors ml-2" 
+                                onclick="event.stopPropagation(); deleteCategory('${cat.id}')" title="Видалити категорію">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                `;
             });
         }
 
@@ -1058,7 +1088,29 @@
                 setTimeout(() => transition.remove(), 600);
             }
         });
+        function deleteCategory(categoryId) {
+            // Предупреждение о том, что будут удалены ВСЕ сообщения в этой категории
+            if (!confirm("Вы уверены, что хотите удалить эту категорию? Все сообщения, связанные с ней, также будут удалены!")) {
+                return;
+            }
+
+            // 1. Удаляем саму категорию
+            categories = categories.filter(cat => cat.id !== categoryId);
+            
+            // 2. Удаляем все сообщения, которые принадлежали этой категории
+            messages = messages.filter(msg => msg.categoryId !== categoryId);
+
+            // 3. Если удаленная категория была активной, сбрасываем activeCategory
+            if (activeCategory === categoryId) {
+                activeCategory = null; // Сбрасываем фильтр
+            }
+
+            // 4. Сохраняем изменения локально и обновляем интерфейс
+            saveDataToLocal(); 
+            renderUI(); 
+        }
     </script>
 </body>
 </html>
+
 
