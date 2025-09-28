@@ -764,45 +764,72 @@ function loadFromLocalStorage() {
         id: generateUniqueId(),
         name: name
     };
+    
     categories.push(newCategory);
     newCategoryInput.value = ''; // Очистка поля ввода
     
-    await saveToGist(); // СОХРАНЕНИЕ ЧЕРЕЗ ПРОКСИ
-    renderUI();
+    // ВАЖНО: Сначала сохраняем в localStorage для мгновенного отображения
+    saveToLocalStorage();
+    renderUI(); // Немедленно обновляем интерфейс
+    
+    // Затем синхронизируем с Gist (в фоне)
+    try {
+        await saveToGist();
+        console.log(`✅ Категорію "${name}" додано та синхронізовано з Gist`);
+    } catch (error) {
+        console.error("❌ Помилка синхронізації з Gist:", error);
+        // Но данные уже в localStorage и отображены
+    }
 }
     async function addMessage() {
-        const categoryId = categorySelect.value;
-        const contentEng = engInput.value.trim();
-        const contentUa = uaInput.value.trim();
+    const categoryId = categorySelect.value;
+    const contentEng = engInput.value.trim();
+    const contentUa = uaInput.value.trim();
 
-        if (categoryId && (contentEng || contentUa)) {
-            const newMessage = {
-                id: generateUniqueId(),
-                categoryId: categoryId,
-                contentEng: contentEng,
-                contentUa: contentUa,
-                createdAt: new Date().toISOString()
-            };
-            messages.push(newMessage);
+    if (categoryId && (contentEng || contentUa)) {
+        const newMessage = {
+            id: generateUniqueId(),
+            categoryId: categoryId,
+            contentEng: contentEng,
+            contentUa: contentUa,
+            createdAt: new Date().toISOString()
+        };
+        messages.push(newMessage);
 
-            engInput.value = '';
-            uaInput.value = '';
+        engInput.value = '';
+        uaInput.value = '';
 
+        // ВАЖНО: Сначала сохраняем в localStorage
+        saveToLocalStorage();
+        renderUI(); // Немедленно обновляем интерфейс
+        
+        // Затем синхронизируем с Gist
+        try {
             await saveToGist();
-            renderUI();
-            
-            console.log(`✅ Сообщение добавлено и синхронизировано`);
+            console.log(`✅ Повідомлення додано та синхронізовано з Gist`);
+        } catch (error) {
+            console.error("❌ Помилка синхронізації з Gist:", error);
         }
     }
-
+}
     async function deleteMessage(id) {
-        const index = messages.findIndex(m => m.id === id);
-        if (index !== -1) {
-            messages.splice(index, 1);
+    const index = messages.findIndex(m => m.id === id);
+    if (index !== -1) {
+        messages.splice(index, 1);
+        
+        // ВАЖНО: Сначала сохраняем в localStorage
+        saveToLocalStorage();
+        renderUI(); // Немедленно обновляем интерфейс
+        
+        // Затем синхронизируем с Gist
+        try {
             await saveToGist();
-            renderUI();
+            console.log(`✅ Повідомлення видалено та синхронізовано з Gist`);
+        } catch (error) {
+            console.error("❌ Помилка синхронізації з Gist:", error);
         }
     }
+}
     // === UI ФУНКЦИИ ===
     function updateButtonStates() {
         const isCategorySelected = categorySelect.value !== "";
@@ -1106,8 +1133,17 @@ document.addEventListener('DOMContentLoaded', initApp);
         selectedCategoryId = 'all';
     }
 
-    await saveToGist();
-    renderUI();
+    // ВАЖНО: Сначала сохраняем в localStorage
+    saveToLocalStorage();
+    renderUI(); // Немедленно обновляем интерфейс
+    
+    // Затем синхронизируем с Gist
+    try {
+        await saveToGist();
+        console.log(`✅ Категорію видалено та синхронізовано з Gist`);
+    } catch (error) {
+        console.error("❌ Помилка синхронізації з Gist:", error);
+    }
 }
         // --- ФУНКЦИЯ ЗАГРУЗКИ ДАННЫХ ИЗ GIST (ЧТЕНИЕ ДВУХ ФАЙЛОВ) ---
 async function loadData() {
@@ -1150,3 +1186,4 @@ async function loadData() {
     </script>
 </body>
 </html>
+
