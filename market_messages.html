@@ -1148,42 +1148,61 @@ document.addEventListener('DOMContentLoaded', initApp);
         // --- ФУНКЦИЯ ЗАГРУЗКИ ДАННЫХ ИЗ GIST (ЧТЕНИЕ ДВУХ ФАЙЛОВ) ---
 async function loadData() {
     const GIST_BASE_URL = `https://gist.githubusercontent.com/${GITHUB_USERNAME}/${GIST_ID}/raw/`; 
+    
+    console.log("🔄 Starting data load...");
 
     try {
-        // 1. Загрузка категорий
-        const categoriesResponse = await fetch(GIST_BASE_URL + 'categories.json');
+        // Сначала пробуем загрузить из Gist
+        console.log("📥 Fetching from Gist...");
+        
+        const [categoriesResponse, messagesResponse] = await Promise.all([
+            fetch(GIST_BASE_URL + 'categories.json'),
+            fetch(GIST_BASE_URL + 'messages.json')
+        ]);
+
+        let gistDataLoaded = false;
+
+        // Загружаем категории из Gist
         if (categoriesResponse.ok) {
-            categories = await categoriesResponse.json();
-            console.log("✅ Categories loaded from Gist:", categories);
-        } else {
-            console.warn('Помилка завантаження categories.json. Починаємо з порожнього масиву.');
-            categories = [];
+            const gistCategories = await categoriesResponse.json();
+            categories = gistCategories;
+            console.log("✅ Categories loaded from Gist:", categories.length, "items");
+            gistDataLoaded = true;
         }
 
-        // 2. Загрузка сообщений
-        const messagesResponse = await fetch(GIST_BASE_URL + 'messages.json');
+        // Загружаем сообщения из Gist
         if (messagesResponse.ok) {
-            messages = await messagesResponse.json();
-            console.log("✅ Messages loaded from Gist:", messages);
-        } else {
-            console.warn('Помилка завантаження messages.json. Починаємо з порожнього масиву.');
-            messages = [];
+            const gistMessages = await messagesResponse.json();
+            messages = gistMessages;
+            console.log("✅ Messages loaded from Gist:", messages.length, "items");
+            gistDataLoaded = true;
         }
 
-        // 3. ВАЖНО: Сохраняем загруженные данные в localStorage
-        saveToLocalStorage();
-        console.log("✅ Data saved to localStorage after loading from Gist");
+        if (gistDataLoaded) {
+            // УСПЕХ: Сохраняем свежие данные в localStorage
+            saveToLocalStorage();
+            console.log("💾 Fresh data saved to localStorage");
+        } else {
+            // Gist пустой, пробуем localStorage
+            console.log("🔄 Gist empty, trying localStorage...");
+            loadFromLocalStorage();
+        }
 
     } catch (e) {
-        console.error("Критична помилка при завантаженні даних Gist:", e);
-        // Если ошибка загрузки из Gist, пробуем загрузить из localStorage
+        console.error("❌ Error loading from Gist:", e);
+        // Ошибка загрузки из Gist, пробуем localStorage
+        console.log("🔄 Fallback to localStorage...");
         loadFromLocalStorage();
-        console.log("🔄 Using localStorage data as fallback");
     } finally {
+        console.log("📊 Final data:", {
+            categories: categories.length,
+            messages: messages.length
+        });
         renderUI();
     }
 }
     </script>
 </body>
 </html>
+
 
