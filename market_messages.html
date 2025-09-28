@@ -782,20 +782,26 @@ const MESSAGES_PER_PAGE = 5;
     }
 }
     async function deleteMessage(id) {
+    // Сохраняем копию для отката
+    const originalMessages = [...messages];
+    
     const index = messages.findIndex(m => m.id === id);
     if (index !== -1) {
         messages.splice(index, 1);
         
-        // ВАЖНО: Сначала сохраняем в localStorage
-        saveToLocalStorage();
-        renderUI(); // Немедленно обновляем интерфейс
+        // Немедленно обновляем UI
+        renderUI();
         
-        // Затем синхронизируем с Gist
+        // Сохраняем в Gist
         try {
             await saveToGist();
-            console.log(`✅ Повідомлення видалено та синхронізовано з Gist`);
+            console.log(`✅ Message deleted successfully`);
         } catch (error) {
-            console.error("❌ Помилка синхронізації з Gist:", error);
+            console.error("❌ Failed to delete message:", error);
+            // Откатываем изменения
+            messages = originalMessages;
+            renderUI();
+            alert("❌ Не вдалося видалити повідомлення. Спробуйте ще раз.");
         }
     }
 }
@@ -1095,6 +1101,11 @@ document.addEventListener('DOMContentLoaded', initApp);
         return;
     }
 
+    // Сохраняем копии для отката
+    const originalCategories = [...categories];
+    const originalMessages = [...messages];
+
+    // Удаляем категорию и связанные сообщения
     categories = categories.filter(cat => cat.id !== categoryId);
     messages = messages.filter(msg => msg.categoryId !== categoryId);
 
@@ -1102,16 +1113,20 @@ document.addEventListener('DOMContentLoaded', initApp);
         selectedCategoryId = 'all';
     }
 
-    // ВАЖНО: Сначала сохраняем в localStorage
-    saveToLocalStorage();
-    renderUI(); // Немедленно обновляем интерфейс
-    
-    // Затем синхронизируем с Gist
+    // Немедленно обновляем UI
+    renderUI();
+
+    // Сохраняем в Gist
     try {
         await saveToGist();
-        console.log(`✅ Категорію видалено та синхронізовано з Gist`);
+        console.log(`✅ Category deleted successfully`);
     } catch (error) {
-        console.error("❌ Помилка синхронізації з Gist:", error);
+        console.error("❌ Failed to delete category:", error);
+        // Откатываем изменения
+        categories = originalCategories;
+        messages = originalMessages;
+        renderUI();
+        alert("❌ Не вдалося видалити категорію. Спробуйте ще раз.");
     }
 }
  function forceReloadFromGist() {
@@ -1166,6 +1181,7 @@ async function loadData() {
     </script>
 </body>
 </html>
+
 
 
 
