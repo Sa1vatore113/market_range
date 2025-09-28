@@ -745,11 +745,25 @@ const MESSAGES_PER_PAGE = 5;
     }
 }
     async function addMessage() {
+    console.log("🔄 addMessage called - проверка работы функции");
+    
     const categoryId = categorySelect.value;
     const contentEng = engInput.value.trim();
     const contentUa = uaInput.value.trim();
 
+    console.log("Category:", categoryId);
+    console.log("ENG:", contentEng);
+    console.log("UA:", contentUa);
+    console.log("Condition check:", {
+        hasCategory: !!categoryId,
+        hasEngContent: !!contentEng, 
+        hasUaContent: !!contentUa,
+        condition: categoryId && (contentEng || contentUa)
+    });
+
     if (categoryId && (contentEng || contentUa)) {
+        console.log("✅ Conditions met, adding message...");
+        
         const newMessage = {
             id: generateUniqueId(),
             categoryId: categoryId,
@@ -758,26 +772,40 @@ const MESSAGES_PER_PAGE = 5;
             createdAt: new Date().toISOString()
         };
         
+        console.log("New message:", newMessage);
+        
         // Сохраняем временную копию для отката
         const originalMessages = [...messages];
-        
+
         messages.push(newMessage);
         engInput.value = '';
         uaInput.value = '';
 
+        // ВАЖНО: Обновляем состояние кнопки
+        updateButtonStates();
+
         // Немедленно обновляем UI
         renderUI();
-        
+
         // Сохраняем в Gist
         try {
             await saveToGist();
-            console.log(`✅ Message added`);
+            console.log(`✅ Message added successfully`);
         } catch (error) {
             console.error("❌ Failed to save message:", error);
             // Откатываем изменения
             messages = originalMessages;
             renderUI();
+            updateButtonStates();
             alert("❌ Не вдалося зберегти повідомлення. Спробуйте ще раз.");
+        }
+    } else {
+        console.log("❌ Conditions not met - button should be disabled");
+        // Показываем пользователю что не так
+        if (!categoryId) {
+            alert("⚠️ Будь ласка, оберіть категорію!");
+        } else if (!contentEng && !contentUa) {
+            alert("⚠️ Будь ласка, введіть текст повідомлення!");
         }
     }
 }
@@ -807,10 +835,16 @@ const MESSAGES_PER_PAGE = 5;
 }
     // === UI ФУНКЦИИ ===
     function updateButtonStates() {
-        const isCategorySelected = categorySelect.value !== "";
-        const isAnyContent = engInput.value.trim() !== "" || uaInput.value.trim() !== "";
-        addMessageBtn.disabled = !(isCategorySelected && isAnyContent);
-    }
+    const isCategorySelected = categorySelect.value !== "";
+    const isAnyContent = engInput.value.trim() !== "" || uaInput.value.trim() !== "";
+    addMessageBtn.disabled = !(isCategorySelected && isAnyContent);
+    
+    console.log("🔄 Button state:", {
+        isCategorySelected,
+        isAnyContent, 
+        disabled: addMessageBtn.disabled
+    });
+}
 
     function updateStatistics() {
         document.getElementById('categories-count').textContent = categories.length;
@@ -1181,6 +1215,7 @@ async function loadData() {
     </script>
 </body>
 </html>
+
 
 
 
