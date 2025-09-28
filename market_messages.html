@@ -657,34 +657,42 @@
 
         async function loadData() {
             try {
-                // 1. Попытка загрузить общие данные из JSON файла (для всех пользователей)
-                const response = await fetch('shared_data.json');
-                if (response.ok) {
-                    const sharedData = await response.json();
-                    
-                    // Загружаем общие данные как основные
-                    categories = sharedData.categories || [];
-                    messages = sharedData.messages || [];
-                    
-                    console.log("Данные загружены из shared_data.json (общий доступ).");
+                // 1. Пріоритет 1: Завантаження з Local Storage (зберігаємо локальні зміни)
+                const storedCategories = localStorage.getItem(CATEGORIES_KEY);
+                const storedMessages = localStorage.getItem(MESSAGES_KEY);
 
-                } else if (response.status === 404) {
-                    // 2. Если общий файл не найден, загружаем локальные данные
-                    console.warn("Файл shared_data.json не найден. Загрузка данных из Local Storage (локальный доступ).");
-                    const storedCategories = localStorage.getItem(CATEGORIES_KEY);
-                    const storedMessages = localStorage.getItem(MESSAGES_KEY);
+                if (storedCategories && storedMessages && storedCategories !== '[]') {
+                    // Якщо Local Storage НЕ порожній, використовуємо його!
+                    categories = JSON.parse(storedCategories);
+                    messages = JSON.parse(storedMessages);
+                    console.log("Дані завантажено з Local Storage (локальні зміни збережено).");
 
-                    categories = storedCategories ? JSON.parse(storedCategories) : [];
-                    messages = storedMessages ? JSON.parse(storedMessages) : [];
-                    
                 } else {
-                     // 3. Другая ошибка (например, CORS или сеть)
-                    throw new Error(`Ошибка загрузки JSON: ${response.status}`);
+                    // 2. Пріоритет 2: Local Storage порожній, завантажуємо спільні дані як БАЗУ
+                    console.warn("Local Storage порожній або містить лише [] (порожні). Завантаження общих даних.");
+                    const response = await fetch('shared_data.json');
+                    
+                    if (response.ok) {
+                        const sharedData = await response.json();
+                        
+                        categories = sharedData.categories || [];
+                        messages = sharedData.messages || [];
+                        
+                        // КРИТИЧНО: Зберігаємо загальні дані локально, щоб вони стали базою
+                        saveDataToLocal(); 
+                        console.log("Спільні дані успішно завантажено.");
+                        
+                    } else if (response.status === 404) {
+                        console.warn("Файл shared_data.json не знайдено. Початок роботи з чистими даними.");
+                        categories = [];
+                        messages = [];
+                    } else {
+                        throw new Error(`Помилка завантаження JSON: ${response.status}`);
+                    }
                 }
 
             } catch (e) {
-                console.error("Критическая ошибка при загрузке данных:", e);
-                // На случай сбоя, инициализируем пустые массивы
+                console.error("Критична помилка при завантаженні даних:", e);
                 categories = [];
                 messages = [];
             } finally {
@@ -1115,6 +1123,7 @@ function deleteMessage(messageId) {
     </script>
 </body>
 </html>
+
 
 
 
