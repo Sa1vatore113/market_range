@@ -651,83 +651,107 @@
 
     // === СИНХРОНИЗАЦИЯ С GIST ===
     async function syncWithGist() {
-        if (!SYNC_ENABLED || !GIST_ID || !GITHUB_TOKEN) {
-            console.log('Синхронизация отключена - используем локальные данные');
-            loadFromLocalStorage();
-            return;
+    console.log('=== START SYNC WITH GIST ===');
+    console.log('SYNC_ENABLED:', SYNC_ENABLED);
+    console.log('GIST_ID:', GIST_ID);
+    console.log('GITHUB_TOKEN exists:', !!GITHUB_TOKEN);
+    
+    if (!SYNC_ENABLED || !GIST_ID || !GITHUB_TOKEN) {
+        console.log('Синхронизация отключена - используем локальные данные');
+        loadFromLocalStorage();
+        return;
+    }
+
+    try {
+        console.log('Загружаем данные из Gist...');
+        const response = await fetch(`https://api.github.com/gists/${GIST_ID}`);
+        
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+
+        if (!response.ok) throw new Error('Ошибка загрузки Gist: ' + response.status);
+
+        const gistData = await response.json();
+        console.log('Gist data received:', gistData);
+
+        // Загружаем категории
+        if (gistData.files['categories.json']) {
+            const remoteCategories = JSON.parse(gistData.files['categories.json'].content);
+            console.log('Категории загружены из Gist:', remoteCategories);
+            categories = remoteCategories;
+        } else {
+            console.log('Файл categories.json не найден в Gist');
         }
 
-        try {
-            console.log('Загружаем данные из Gist...');
-            const response = await fetch(`https://api.github.com/gists/${GIST_ID}`);
-            
-            if (!response.ok) throw new Error('Ошибка загрузки Gist');
-            
-            const gistData = await response.json();
-            
-            // Загружаем категории
-            if (gistData.files['categories.json']) {
-                const remoteCategories = JSON.parse(gistData.files['categories.json'].content);
-                categories = remoteCategories;
-                console.log('Категории загружены из Gist:', categories.length);
-            }
-            
-            // Загружаем сообщения
-            if (gistData.files['messages.json']) {
-                const remoteMessages = JSON.parse(gistData.files['messages.json'].content);
-                messages = remoteMessages;
-                console.log('Сообщения загружены из Gist:', messages.length);
-            }
-            
-            // Сохраняем в localStorage как резервную копию
-            saveToLocalStorage();
-            renderUI();
-            
-        } catch (error) {
-            console.error('Ошибка синхронизации с Gist:', error);
-            console.log('Используем локальные данные...');
-            loadFromLocalStorage();
+        // Загружаем сообщения
+        if (gistData.files['messages.json']) {
+            const remoteMessages = JSON.parse(gistData.files['messages.json'].content);
+            console.log('Сообщения загружены из Gist:', remoteMessages);
+            messages = remoteMessages;
+        } else {
+            console.log('Файл messages.json не найден в Gist');
         }
+
+        // Сохраняем в localStorage как резервную копию
+        saveToLocalStorage();
+        renderUI();
+        console.log('=== SYNC COMPLETE ===');
+
+    } catch (error) {
+        console.error('❌ Ошибка синхронизации с Gist:', error);
+        console.log('Используем локальные данные...');
+        loadFromLocalStorage();
     }
+}
 
     async function saveToGist() {
-        if (!SYNC_ENABLED || !GIST_ID || !GITHUB_TOKEN) {
-            saveToLocalStorage();
-            return;
-        }
-
-        try {
-            const gistData = {
-                files: {
-                    'categories.json': {
-                        content: JSON.stringify(categories, null, 2)
-                    },
-                    'messages.json': {
-                        content: JSON.stringify(messages, null, 2)
-                    }
-                }
-            };
-            
-            const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `token ${GITHUB_TOKEN}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(gistData)
-            });
-            
-            if (!response.ok) throw new Error('Ошибка сохранения в Gist');
-            
-            console.log('✅ Данные сохранены в Gist');
-            saveToLocalStorage();
-            
-        } catch (error) {
-            console.error('❌ Ошибка сохранения в Gist:', error);
-            console.log('Сохраняем только локально...');
-            saveToLocalStorage();
-        }
+    console.log('=== START SAVE TO GIST ===');
+    console.log('Categories to save:', categories);
+    console.log('Messages to save:', messages);
+    
+    if (!SYNC_ENABLED || !GIST_ID || !GITHUB_TOKEN) {
+        console.log('Синхронизация отключена - сохраняем только локально');
+        saveToLocalStorage();
+        return;
     }
+
+    try {
+        const gistData = {
+            files: {
+                'categories.json': {
+                    content: JSON.stringify(categories, null, 2)
+                },
+                'messages.json': {
+                    content: JSON.stringify(messages, null, 2)
+                }
+            }
+        };
+
+        console.log('Sending to Gist...');
+        const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(gistData)
+        });
+
+        console.log('Save response status:', response.status);
+        console.log('Save response ok:', response.ok);
+
+        if (!response.ok) throw new Error('Ошибка сохранения в Gist: ' + response.status);
+
+        console.log('✅ Данные сохранены в Gist');
+        saveToLocalStorage();
+
+    } catch (error) {
+        console.error('❌ Ошибка сохранения в Gist:', error);
+        console.log('Сохраняем только локально...');
+        saveToLocalStorage();
+    }
+    console.log('=== SAVE COMPLETE ===');
+}
 
     // === LOCAL STORAGE ===
     function saveToLocalStorage() {
@@ -782,26 +806,28 @@
     }
 
     async function addCategory() {
-        const name = newCategoryInput.value.trim();
+    const name = newCategoryInput.value.trim();
 
-        if (name) {
-            const newCategory = {
-                id: generateUniqueId(),
-                name: name,
-                createdAt: new Date().toISOString()
-            };
-            categories.push(newCategory);
-            newCategoryInput.value = '';
-            
-            await saveToGist();
-            renderUI();
-            
-            console.log(`✅ Категория "${name}" добавлена и синхронизирована`);
-        } else {
-            console.log("Назва категорії не може бути порожньою.");
-        }
+    if (name) {
+        const newCategory = {
+            id: generateUniqueId(),
+            name: name,
+            createdAt: new Date().toISOString()
+        };
+        categories.push(newCategory);
+        newCategoryInput.value = '';
+
+        console.log('Добавляем категорию:', newCategory);
+        console.log('Все категории после добавления:', categories);
+
+        await saveToGist();
+        renderUI();
+
+        console.log(`✅ Категория "${name}" добавлена и синхронизирована`);
+    } else {
+        console.log("Назва категорії не може бути порожньою.");
     }
-
+}
     async function addMessage() {
         const categoryId = categorySelect.value;
         const contentEng = engInput.value.trim();
@@ -835,23 +861,6 @@
             renderUI();
         }
     }
-
-    async function deleteCategory(categoryId) {
-        if (!confirm("Ви впевнені, що хочете видалити цю категорію? Всі повідомлення, пов'язані з нею, також будуть видалені!")) {
-            return;
-        }
-
-        categories = categories.filter(cat => cat.id !== categoryId);
-        messages = messages.filter(msg => msg.categoryId !== categoryId);
-
-        if (selectedCategoryId === categoryId) {
-            selectedCategoryId = 'all';
-        }
-
-        await saveToGist();
-        renderUI();
-    }
-
     // === UI ФУНКЦИИ ===
     function updateButtonStates() {
         const isCategorySelected = categorySelect.value !== "";
@@ -1156,6 +1165,7 @@
     </script>
 </body>
 </html>
+
 
 
 
