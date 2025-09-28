@@ -698,31 +698,30 @@ const MESSAGES_PER_PAGE = 5;
 }
     // === LOCAL STORAGE ===
     function saveToLocalStorage() {
-        try {
-            localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
-            localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
-        } catch (e) {
-            console.error("Ошибка сохранения в localStorage:", e);
-        }
+    try {
+        localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+        localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
+        console.log("💾 Data saved to localStorage");
+    } catch (e) {
+        console.error("❌ Error saving to localStorage:", e);
     }
+}
 
-    function loadFromLocalStorage() {
-        try {
-            const storedCategories = localStorage.getItem(CATEGORIES_KEY);
-            const storedMessages = localStorage.getItem(MESSAGES_KEY);
+function loadFromLocalStorage() {
+    try {
+        const storedCategories = localStorage.getItem(CATEGORIES_KEY);
+        const storedMessages = localStorage.getItem(MESSAGES_KEY);
 
-            categories = storedCategories ? JSON.parse(storedCategories) : [];
-            messages = storedMessages ? JSON.parse(storedMessages) : [];
-            
-            renderUI();
-        } catch (e) {
-            console.error("Ошибка загрузки из localStorage:", e);
-            categories = [];
-            messages = [];
-            renderUI();
-        }
+        categories = storedCategories ? JSON.parse(storedCategories) : [];
+        messages = storedMessages ? JSON.parse(storedMessages) : [];
+        
+        console.log("📥 Data loaded from localStorage");
+    } catch (e) {
+        console.error("❌ Error loading from localStorage:", e);
+        categories = [];
+        messages = [];
     }
-
+}
     function clearAllData() {
         const result = window.prompt("Увага! Це повністю видалить усі дані (категорії та повідомлення) з вашого браузера. Для підтвердження введіть 'ОЧИСТИТИ'.");
 
@@ -1119,6 +1118,7 @@ async function loadData() {
         const categoriesResponse = await fetch(GIST_BASE_URL + 'categories.json');
         if (categoriesResponse.ok) {
             categories = await categoriesResponse.json();
+            console.log("✅ Categories loaded from Gist:", categories);
         } else {
             console.warn('Помилка завантаження categories.json. Починаємо з порожнього масиву.');
             categories = [];
@@ -1128,43 +1128,25 @@ async function loadData() {
         const messagesResponse = await fetch(GIST_BASE_URL + 'messages.json');
         if (messagesResponse.ok) {
             messages = await messagesResponse.json();
+            console.log("✅ Messages loaded from Gist:", messages);
         } else {
             console.warn('Помилка завантаження messages.json. Починаємо з порожнього масиву.');
             messages = [];
         }
 
+        // 3. ВАЖНО: Сохраняем загруженные данные в localStorage
+        saveToLocalStorage();
+        console.log("✅ Data saved to localStorage after loading from Gist");
+
     } catch (e) {
         console.error("Критична помилка при завантаженні даних Gist:", e);
-        categories = []; 
-        messages = [];
+        // Если ошибка загрузки из Gist, пробуем загрузить из localStorage
+        loadFromLocalStorage();
+        console.log("🔄 Using localStorage data as fallback");
     } finally {
         renderUI();
     }
 }
-// Важно: Убедитесь, что эта функция вызывается в конце скрипта или в 'DOMContentLoaded'
-// loadData(); 
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
