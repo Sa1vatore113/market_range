@@ -660,41 +660,32 @@ const MESSAGES_PER_PAGE = 5;
     async function saveToGist() {
     const dataToSave = { categories, messages };
     
-    console.log("🔄 Starting save to Gist...");
+    console.log("💾 Saving to Gist...");
     
-    // Сохраняем в localStorage в любом случае
-    saveToLocalStorage();
-    console.log("✅ Data saved to localStorage");
-    
-    // Пробуем разные пути к функции Netlify
-    const endpoints = [
-        '/.netlify/functions/update-gist',
-        '/api/update-gist',
-        'https://your-site-name.netlify.app/.netlify/functions/update-gist' // замените your-site-name
-    ];
-    
-    for (const endpoint of endpoints) {
-        try {
-            console.log(`Trying endpoint: ${endpoint}`);
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(dataToSave)
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                console.log("✅ Data saved to Gist via:", endpoint, result);
-                return; // Просто выходим без уведомлений
-            } else {
-                console.log(`Endpoint ${endpoint} failed:`, response.status);
-            }
-        } catch (error) {
-            console.log(`Endpoint ${endpoint} error:`, error.message);
+    try {
+        const response = await fetch('/.netlify/functions/update-gist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dataToSave)
+        });
+
+        if (response.ok) {
+            console.log("✅ Data saved to Gist");
+            // НЕ сохраняем в localStorage - используем только Gist
+        } else {
+            console.error("❌ Failed to save to Gist:", response.status);
+            // В случае ошибки сохраняем в localStorage
+            localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+            localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
+            console.log("💾 Data saved to localStorage as backup");
         }
+    } catch (error) {
+        console.error("❌ Network error:", error);
+        // Сетевая ошибка - сохраняем в localStorage
+        localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+        localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
+        console.log("💾 Data saved to localStorage as backup");
     }
-    
-    console.log("⚠️ Gist sync temporarily unavailable");
 }
     // === LOCAL STORAGE ===
     function saveToLocalStorage() {
@@ -1149,52 +1140,59 @@ document.addEventListener('DOMContentLoaded', initApp);
 async function loadData() {
     const GIST_BASE_URL = `https://gist.githubusercontent.com/${GITHUB_USERNAME}/${GIST_ID}/raw/`; 
     
-    console.log("🔄 Starting data load...");
+    console.log("🔄 Starting data load from Gist...");
 
     try {
-        // Сначала пробуем загрузить из Gist
-        console.log("📥 Fetching from Gist...");
-        
+        // Загружаем данные из Gist
         const [categoriesResponse, messagesResponse] = await Promise.all([
-            fetch(GIST_BASE_URL + 'categories.json'),
-            fetch(GIST_BASE_URL + 'messages.json')
+            fetch(GIST_BASE_URL + 'categories.json?t=' + Date.now()), // Добавляем timestamp чтобы избежать кеша
+            fetch(GIST_BASE_URL + 'messages.json?t=' + Date.now())
         ]);
 
-        let gistDataLoaded = false;
+        console.log("Categories response:", categoriesResponse.status);
+        console.log("Messages response:", messagesResponse.status);
 
-        // Загружаем категории из Gist
+        // Обрабатываем категории
         if (categoriesResponse.ok) {
             const gistCategories = await categoriesResponse.json();
             categories = gistCategories;
-            console.log("✅ Categories loaded from Gist:", categories.length, "items");
-            gistDataLoaded = true;
+            console.log("✅ Categories loaded from Gist:", categories.length);
+        } else {
+            console.warn("❌ Failed to load categories from Gist");
+            categories = [];
         }
 
-        // Загружаем сообщения из Gist
+        // Обрабатываем сообщения
         if (messagesResponse.ok) {
             const gistMessages = await messagesResponse.json();
             messages = gistMessages;
-            console.log("✅ Messages loaded from Gist:", messages.length, "items");
-            gistDataLoaded = true;
+            console.log("✅ Messages loaded from Gist:", messages.length);
+        } else {
+            console.warn("❌ Failed to load messages from Gist");
+            messages = [];
         }
 
-        if (gistDataLoaded) {
-            // УСПЕХ: Сохраняем свежие данные в localStorage
-            saveToLocalStorage();
-            console.log("💾 Fresh data saved to localStorage");
-        } else {
-            // Gist пустой, пробуем localStorage
-            console.log("🔄 Gist empty, trying localStorage...");
-            loadFromLocalStorage();
-        }
+        // ВАЖНО: НЕ используем localStorage как резерв
+        console.log("🎯 Using ONLY Gist data, ignoring localStorage");
 
     } catch (e) {
-        console.error("❌ Error loading from Gist:", e);
-        // Ошибка загрузки из Gist, пробуем localStorage
-        console.log("🔄 Fallback to localStorage...");
-        loadFromLocalStorage();
+        console.error("❌ Critical error loading from Gist:", e);
+        // В случае ошибки пробуем загрузить из localStorage
+        try {
+            const storedCategories = localStorage.getItem(CATEGORIES_KEY);
+            const storedMessages = localStorage.getItem(MESSAGES_KEY);
+            
+            if (storedCategories) categories = JSON.parse(storedCategories);
+            if (storedMessages) messages = JSON.parse(storedMessages);
+            
+            console.log("🔄 Loaded from localStorage as fallback");
+        } catch (localError) {
+            console.error("❌ Also failed to load from localStorage:", localError);
+            categories = [];
+            messages = [];
+        }
     } finally {
-        console.log("📊 Final data:", {
+        console.log("📊 Final data state:", {
             categories: categories.length,
             messages: messages.length
         });
@@ -1204,5 +1202,6 @@ async function loadData() {
     </script>
 </body>
 </html>
+
 
 
