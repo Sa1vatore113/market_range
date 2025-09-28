@@ -637,98 +637,33 @@
     <!-- JavaScript Logic -->
     <!-- type="module" ПРИБРАНО, щоб дозволити локальний запуск (file://) -->
     <script>
-         // === КОНФИГУРАЦИЯ GIST ===
-    const GIST_ID = 'd69178844555b679725326d4174f0b7a'; // Ваш ID
-    const GITHUB_USERNAME = 'Sa1vatore113'; // Например, YourUsername
-    const SYNC_ENABLED = true; // Включить/выключить синхронизацию
+   // =====================================================================
+// === 1. ГЛОБАЛЬНАЯ КОНФИГУРАЦИЯ И ПЕРЕМЕННЫЕ ===
+// Токен спрятан в переменных окружения Netlify.
+const GIST_ID = 'd69178844555b679725326d4174f0b7a'; 
+const GITHUB_USERNAME = 'Sa1vatore113'; // <-- !!! УКАЖИТЕ СВОЙ НИКНЕЙМ ЗДЕСЬ !!!
 
-    const CATEGORIES_KEY = 'messageCategories';
-    const MESSAGES_KEY = 'messages';
+const CATEGORIES_KEY = 'messageCategories';
+const MESSAGES_KEY = 'messages';
 
-    let categories = [];
-    let messages = [];
-    let selectedCategoryId = 'all';
-    let currentPage = 1;
-    const MESSAGES_PER_PAGE = 5;
+let categories = [];
+let messages = [];
+let selectedCategoryId = 'all';
+let currentPage = 1;
+const MESSAGES_PER_PAGE = 5;
+// =====================================================================
 
     // === DOM ЕЛЕМЕНТЫ ===
     let engInput, uaInput, categorySelect, addMessageBtn, newCategoryInput, addCategoryBtn;
 
     // === СИНХРОНИЗАЦИЯ С GIST ===
-    async function syncWithGist() {
-    console.log('=== START SYNC WITH GIST ===');
-    console.log('SYNC_ENABLED:', SYNC_ENABLED);
-    console.log('GIST_ID:', GIST_ID);
-    console.log('GITHUB_TOKEN exists:', !!GITHUB_TOKEN);
-
-    if (!SYNC_ENABLED || !GIST_ID || !GITHUB_TOKEN) {
-        console.log('Синхронизация отключена - используем локальные данные');
-        loadFromLocalStorage();
-        return;
-    }
-
-    try {
-        console.log('Загружаем данные из Gist...');
-        const response = await fetch(GIST_URL, {
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
-
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-        }
-
-        const gistData = await response.json();
-        console.log('Gist files:', Object.keys(gistData.files));
-
-        // Загружаем категории
-        if (gistData.files['categories.json']) {
-            const remoteCategories = JSON.parse(gistData.files['categories.json'].content);
-            console.log('Категории загружены из Gist:', remoteCategories.length);
-            categories = remoteCategories;
-        } else {
-            console.log('Файл categories.json не найден в Gist');
-            categories = [];
-        }
-
-        // Загружаем сообщения
-        if (gistData.files['messages.json']) {
-            const remoteMessages = JSON.parse(gistData.files['messages.json'].content);
-            console.log('Сообщения загружены из Gist:', remoteMessages.length);
-            messages = remoteMessages;
-        } else {
-            console.log('Файл messages.json не найден в Gist');
-            messages = [];
-        }
-
-        // Сохраняем в localStorage как резервную копию
-        saveToLocalStorage();
-        renderUI();
-        console.log('=== SYNC COMPLETE ===');
-
-    } catch (error) {
-        console.error('❌ Ошибка синхронизации с Gist:', error);
-        console.log('Используем локальные данные...');
-        loadFromLocalStorage();
-    }
-}
     async function saveToGist() {
-    
-    // Передаем только данные, но не токен!
     const dataToSave = { categories, messages };
     
     try {
-        // Адрес нашей функции на Netlify (заменит GIST API)
         const response = await fetch('/.netlify/functions/update-gist', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dataToSave)
         });
 
@@ -736,10 +671,10 @@
             console.log("Дані успішно збережено через проксі-сервер.");
         } else {
             console.error("Помилка збереження на Gist через проксі:", response.status, await response.text());
-            alert("Помилка: Не вдалося зберегти зміни на Gist. Проблема на сервері.");
+            alert("Помилка: Не вдалося зберегти зміни на Gist. Перевірте лог сервера Netlify.");
         }
     } catch (error) {
-        console.error("Сетевая ошибка при вызове прокси-сервера:", error);
+        console.error("Мережева помилка при виклику проксі-сервера:", error);
     }
 }
 
@@ -796,23 +731,28 @@
     }
 
     async function addCategory() {
-            const name = newCategoryInput.value.trim();
+    const name = newCategoryInput.value.trim();
 
-            if (name) {
-                const newCategory = {
-                    id: generateUniqueId(),
-                    name: name
-                };
-                categories.push(newCategory);
-                newCategoryInput.value = '';
-                
-                await saveToGist(); // <-- Сохранение в Gist
-                renderUI();
-                console.log(`Категорію "${name}" додано та оновлено Gist.`);
-            } else {
-                console.log("Назва категорії не може бути порожньою.");
-            }
-        }
+    if (!name) {
+        alert('Будь ласка, введіть назву категорії.');
+        return;
+    }
+
+    if (categories.some(cat => cat.name.toLowerCase() === name.toLowerCase())) {
+        alert('Категорія з таким назвою вже існує.');
+        return;
+    }
+
+    const newCategory = {
+        id: generateUniqueId(),
+        name: name
+    };
+    categories.push(newCategory);
+    newCategoryInput.value = ''; // Очистка поля ввода
+    
+    await saveToGist(); // СОХРАНЕНИЕ ЧЕРЕЗ ПРОКСИ
+    renderUI();
+}
     async function addMessage() {
         const categoryId = categorySelect.value;
         const contentEng = engInput.value.trim();
@@ -1063,27 +1003,32 @@
 
     // === ИНИЦИАЛИЗАЦИЯ ===
     async function initApp() {
-        engInput = document.getElementById('new-message-content-eng');
-        uaInput = document.getElementById('new-message-content-ua');
-        categorySelect = document.getElementById('category-select');
-        addMessageBtn = document.getElementById('add-message-btn');
-        newCategoryInput = document.getElementById('new-category-name');
-        addCategoryBtn = document.getElementById('add-category-btn');
+    // Инициализация элементов DOM
+    engInput = document.getElementById('new-message-content-eng');
+    uaInput = document.getElementById('new-message-content-ua');
+    categorySelect = document.getElementById('category-select');
+    addMessageBtn = document.getElementById('add-message-btn');
+    newCategoryInput = document.getElementById('new-category-name');
+    addCategoryBtn = document.getElementById('add-category-btn');
 
-        await syncWithGist();
-
-        addCategoryBtn.addEventListener('click', addCategory);
-        addMessageBtn.addEventListener('click', addMessage);
-        document.getElementById('clear-all-data-btn').addEventListener('click', clearAllData);
-
-        categorySelect.addEventListener('change', updateButtonStates);
-        engInput.addEventListener('input', updateButtonStates);
-        uaInput.addEventListener('input', updateButtonStates);
-
-        uaInput.placeholder = "Сюди буде додано переклад, або введіть його вручну";
+    // НАЗНАЧЕНИЕ ОБРАБОТЧИКОВ
+    if (addCategoryBtn) {
+        addCategoryBtn.addEventListener('click', addCategory); 
     }
+    addMessageBtn.addEventListener('click', addMessage);
+    document.getElementById('clear-all-data-btn').addEventListener('click', clearAllData);
 
-    document.addEventListener('DOMContentLoaded', initApp);
+    categorySelect.addEventListener('change', updateButtonStates);
+    engInput.addEventListener('input', updateButtonStates);
+    uaInput.addEventListener('input', updateButtonStates);
+
+    uaInput.placeholder = "Сюди буде додано переклад, або введіть його вручну";
+
+    // ЗАГРУЗКА ДАННЫХ
+    await loadData(); // Используем новую функцию загрузки
+}
+
+document.addEventListener('DOMContentLoaded', initApp);
 
     // Бургер-меню
     document.getElementById('burgerBtn').addEventListener('click', function (e) {
@@ -1157,7 +1102,7 @@ async function loadData() {
         if (categoriesResponse.ok) {
             categories = await categoriesResponse.json();
         } else {
-            console.warn('Ошибка загрузки categories.json. Начинаем с пустого массива.');
+            console.warn('Помилка завантаження categories.json. Починаємо з порожнього масиву.');
             categories = [];
         }
 
@@ -1166,13 +1111,12 @@ async function loadData() {
         if (messagesResponse.ok) {
             messages = await messagesResponse.json();
         } else {
-            console.warn('Ошибка загрузки messages.json. Начинаем с пустого массива.');
+            console.warn('Помилка завантаження messages.json. Починаємо з порожнього масиву.');
             messages = [];
         }
 
     } catch (e) {
-        console.error("Критическая ошибка при загрузке данных Gist:", e);
-        // Резервный вариант
+        console.error("Критична помилка при завантаженні даних Gist:", e);
         categories = []; 
         messages = [];
     } finally {
@@ -1184,6 +1128,7 @@ async function loadData() {
     </script>
 </body>
 </html>
+
 
 
 
