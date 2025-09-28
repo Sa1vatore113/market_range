@@ -1,0 +1,16 @@
+{
+  "categories": [
+    {
+      "id": "1",
+      "name": "Основное"
+    }
+  ],
+  "messages": [
+    {
+      "id": "m1",
+      "categoryId": "1",
+      "contentEng": "This is a shared message.",
+      "contentUa": "Це спільне повідомлення."
+    }
+  ]
+}
