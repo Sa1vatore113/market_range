@@ -659,11 +659,11 @@ const MESSAGES_PER_PAGE = 5;
     // === СИНХРОНИЗАЦИЯ С GIST ===
     async function saveToGist() {
     const dataToSave = { categories, messages };
-    
+
     console.log("💾 Saving to Gist...");
-    
+
     try {
-        const response = await fetch('/.netlify/functions/update-gist', {
+        const response = await fetch('/api/update-gist.js', { // путь к API route в Vercel
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dataToSave)
@@ -678,7 +678,7 @@ const MESSAGES_PER_PAGE = 5;
         }
     } catch (error) {
         console.error("❌ Save error:", error);
-        throw error; // Пробрасываем ошибку дальше
+        throw error;
     }
 }
     // === LOCAL STORAGE ===
@@ -1235,6 +1235,7 @@ async function loadData() {
     </script>
 </body>
 </html>
+
 
 
 
