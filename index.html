@@ -356,6 +356,7 @@
                 font-weight: 600;
                 border: none;
             }
+
         .burger-menu {
             position: fixed;
             top: 20px;
@@ -595,6 +596,7 @@
                         <option>BMW/Mini</option>
                         <option>Chevrolet/GMC</option>
                         <option>Ford/Lincoln</option>
+                        <option>Fisker</option>
                         <option>Honda/Acura</option>
                         <option>Hyundai/KIA</option>
                         <option>Jaguar/Land Rover</option>
@@ -663,12 +665,12 @@
             const div = document.createElement('div');
             div.classList.add('part-item');
             div.innerHTML = `
-                 <div class="flex items-center justify-between mb-2">
-                        <label class="block mb-0">Деталь ${partCounter}: Пробіг (тис. миль)</label>
-                        <button onclick="removePart(this)" class="text-red-400 hover:text-red-300 text-lg font-bold ml-2">×</button>
-                    </div>
-                    <input type="number" class="partMileage input-field">
-              `;
+                     <div class="flex items-center justify-between mb-2">
+                            <label class="block mb-0">Деталь ${partCounter}: Пробіг (тис. миль)</label>
+                            <button onclick="removePart(this)" class="text-red-400 hover:text-red-300 text-lg font-bold ml-2">×</button>
+                        </div>
+                        <input type="number" class="partMileage input-field">
+                  `;
             partsList.appendChild(div);
         }
         function removePart(button) {
@@ -733,11 +735,11 @@
             table.classList.add('result-table');
             table.innerHTML = `
 <thead>
-                <tr>
-                    <th>Деталь</th>
-                    <th>Пробіг</th>
-                    <th class="number-cell">Ціна</th>
-                </tr>
+                    <tr>
+                        <th>Деталь</th>
+                        <th>Пробіг</th>
+                        <th class="number-cell">Ціна</th>
+                    </tr>
 </thead>
 <tbody>
 </tbody>`;
@@ -748,11 +750,11 @@
                 const centsIndex = parseInt(document.getElementById("centsIndex").value) || 0;
                 const roundedPrice = roundTo49(fairPrice, centsIndex);
                 tbody.innerHTML += `
-                <tr>
-                    <td><strong>Деталь ${idx + 1}</strong></td>
-                    <td>${m.toLocaleString()} миль</td>
-                    <td class="number-cell"><strong>$${roundedPrice}</strong></td>
-                </tr>`;
+                    <tr>
+                        <td><strong>Деталь ${idx + 1}</strong></td>
+                        <td>${m.toLocaleString()} миль</td>
+                        <td class="number-cell"><strong>$${roundedPrice}</strong></td>
+                    </tr>`;
             });
 
             tableContainer.appendChild(tableHeader);
@@ -858,6 +860,9 @@
                 "Ranger (2019-2023)": "Двигун: 2.3L EcoBoost I4\nПривід: Задній привід (RWD), Повний привід (4WD)\nТрансмісія: 10-ступенева автоматична (10-speed Automatic)",
                 "Transit Connect (2019-2023)": "Двигун: 2.0L I4, 2.5L I4\nПривід: Передній привід (FWD)\nТрансмісія: 8-ступенева автоматична (8-speed Automatic), 6-ступенева автоматична (6-speed Automatic)",
                 "Transit T-15/25/35 (2015-2023)": "Двигун: 3.5L V6, 3.5L EcoBoost V6\nПривід: Задній привід (RWD)\nТрансмісія: 10-ступенева автоматична (10-speed Automatic), 6-ступенева автоматична (6-speed Automatic)"
+            },
+            "Fisker": {
+                "Ocean (2023-2025)": "Двигун: Електричний\nПривід: Передній привід (FWD), Повний привід (AWD)\nТрансмісія: Одноступенева (Single-speed)"
             },
             "Genesis": {
                 "G70 (2017-2025)": "Двигун: 2.0L Turbo I4, 3.3L Twin-Turbo V6\nПривід: Задній привід (RWD), Повний привід (AWD)\nТрансмісія: 8-ступенева автоматична (8-speed Automatic)",
@@ -1125,15 +1130,15 @@
 
             let tableHTML = `
 <table class="result-table">
-                <thead>
-                    <tr>
-                        <th>%</th>
-                        <th class="number-cell">Разом</th>
-                        <th class="number-cell">Базова</th>
-                        <th>Знижка 20-25%</th>
-                    </tr>
-                </thead>
-                <tbody>`;
+                    <thead>
+                        <tr>
+                            <th>%</th>
+                            <th class="number-cell">Разом</th>
+                            <th class="number-cell">Базова</th>
+                            <th>Знижка 20-25%</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
 
             // для сохранения диапазона (50% и 80%)
             let savedMin = null;
@@ -1150,12 +1155,12 @@
                 if (p === 80) savedMax = parseFloat(finalValue);
 
                 tableHTML += `
-                <tr>
-                    <td class="compact-cell"><strong>${p}%</strong></td>
-                    <td class="number-cell">$${valueWithCents.toFixed(2)}</td>
-                    <td class="number-cell"><strong>$${finalValue}</strong></td>
-                    <td class="compact-cell">$${discounted25} – $${discounted20}</td>
-                </tr>`;
+                    <tr>
+                        <td class="compact-cell"><strong>${p}%</strong></td>
+                        <td class="number-cell">$${valueWithCents.toFixed(2)}</td>
+                        <td class="number-cell"><strong>$${finalValue}</strong></td>
+                        <td class="compact-cell">$${discounted25} – $${discounted20}</td>
+                    </tr>`;
             }
 
             tableHTML += `</tbody></table>`;
@@ -1871,6 +1876,7 @@
                 'bmw': processBmwNumber,
                 'mini': processBmwNumber,
                 'ford': processFordNumber,
+                'fisker': processFiskerNumber,
                 'lincoln': processFordNumber,
                 'chevrolet': processFordNumber,
                 'gmc': processFordNumber,
@@ -2095,6 +2101,72 @@
                 setTimeout(() => transition.remove(), 600);
             }
         });
+        function processFiskerNumber(number) {
+            if (!number || typeof number !== "string") return "Unsupported format.";
+
+            const cleanNumber = number.replace(/[-\s]/g, "").toUpperCase();
+
+            if (/[^A-Z0-9]/.test(cleanNumber)) {
+                return "Unsupported format.";
+            }
+
+            const variants = new Set();
+
+            // Всегда добавляем оригинал
+            variants.add(cleanNumber);
+
+            // Fisker использует различные префиксы: FM, FO, FI, FS, FP
+            const fiskerPrefixes = ['FM', 'FO', 'FI', 'FS', 'FP'];
+            let hasFiskerPrefix = false;
+            let prefix = '';
+
+            for (const fiskerPrefix of fiskerPrefixes) {
+                if (cleanNumber.startsWith(fiskerPrefix)) {
+                    hasFiskerPrefix = true;
+                    prefix = fiskerPrefix;
+                    break;
+                }
+            }
+
+            if (hasFiskerPrefix) {
+                const core = cleanNumber.slice(prefix.length); // убираем префикс
+
+                // Определяем есть ли буквенный суффикс
+                const suffixMatch = core.match(/([A-Z]+)$/);
+
+                if (suffixMatch) {
+                    // Есть суффикс - отделяем цифры от букв
+                    const digits = core.slice(0, -suffixMatch[1].length);
+                    const suffix = suffixMatch[1];
+
+                    // Вариант 1: префикс + цифры + пробел + суффикс
+                    variants.add(`${prefix}${digits} ${suffix}`);
+
+                    // Вариант 2: префикс пробел + цифры + суффикс
+                    variants.add(`${prefix} ${digits}${suffix}`);
+
+                    // Вариант 3: префикс пробел + цифры + пробел + суффикс
+                    variants.add(`${prefix} ${digits} ${suffix}`);
+
+                    // Если суффикс длинный (3+ символа), добавляем вариант с разделением суффикса
+                    if (suffix.length >= 3) {
+                        variants.add(`${prefix}${digits}${suffix[0]} ${suffix.slice(1)}`);
+                    }
+                } else {
+                    // Нет суффикса - только цифры
+                    // Вариант 1: префикс пробел + цифры
+                    variants.add(`${prefix} ${core}`);
+                }
+            } else {
+                // Если нет известного префикса Fisker - базовое разделение
+                variants.add(cleanNumber);
+                if (cleanNumber.length > 8) {
+                    variants.add(`${cleanNumber.slice(0, 8)} ${cleanNumber.slice(8)}`);
+                }
+            }
+
+            return Array.from(variants).join(" / ");
+        }
     </script>
 </body>
 </html>
